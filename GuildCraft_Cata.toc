@@ -1,0 +1,24 @@
+## Interface: 40400
+## Title: GuildCraft
+## Notes: Guild profession and recipe directory. Broadcasts your trade skills to guildmates automatically.
+## Notes-frFR: Repertoire des metiers et recettes de la guilde. Diffuse automatiquement vos competences.
+## Version: 0.9.0
+## Author: GuildCraft
+## SavedVariables: GuildCraftDB
+## X-Website: https://github.com/pampa/GuildCraft
+## X-License: MIT
+
+Core.lua
+Locales\enUS.lua
+Locales\frFR.lua
+Locales\deDE.lua
+Locales\esES.lua
+Locales\ptBR.lua
+Locales\ruRU.lua
+DB.lua
+Scanner.lua
+Broadcast.lua
+RecipeDB.lua
+UI.lua
+Debug.lua
+Minimap.lua

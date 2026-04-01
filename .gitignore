@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Claude instructions (local only)
+CLAUDE.md
+
+# Deploy script (local paths, not useful for others)
+deploy.sh
+
+# Internal notes
+COMMANDES.txt
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temp
+*.tmp
+*.log

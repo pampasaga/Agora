@@ -1,0 +1,115 @@
+-- GuildCraft - Locales/deDE.lua
+-- German (deDE) locale overrides.
+
+if GetLocale() ~= "deDE" then return end
+
+local L = GuildCraft.L
+
+-- Core
+L["CORE_ScanComplete"]      = "Scan und Übertragung abgeschlossen."
+L["CORE_ErrorPrefix"]       = "GuildCraft Fehler: "
+L["CORE_DebugErrorPrefix"]  = "GuildCraft Debug-Fehler: "
+
+-- UI - Buttons / Tabs
+L["UI_TabByRecipe"]         = "Nach Rezept"
+L["UI_TabByMember"]         = "Nach Mitglied"
+L["UI_BtnRefresh"]          = "Aktualisieren"
+L["UI_BtnCurrentOnly"]      = "Nur %s"
+L["UI_BtnIncludePrev"]      = "+ %s"
+
+-- UI - Title / Legend
+L["UI_SearchHint"]          = "Rezept suchen..."
+L["UI_LegendAvailable"]     = "Verfügbar"
+L["UI_LegendUnknown"]       = "Unbekannt"
+L["UI_SuffixPatrons"]       = " Rezept(e)"
+L["UI_SuffixRecipes"]       = " Rezept(e)"
+
+-- UI - Expansion filter tooltip
+L["UI_FilterTitle"]         = "Nach Erweiterung filtern"
+L["UI_FilterShowing"]       = "Anzeige: %s + %s"
+L["UI_FilterShowingOnly"]   = "Anzeige: nur %s"
+L["UI_FilterClickOnly"]     = "Klicken für nur %s"
+L["UI_FilterClickInclude"]  = "Klicken um %s einzubeziehen"
+
+-- UI - Messages
+L["UI_NoResults"]           = "Keine Ergebnisse für \"%s\"."
+L["UI_NoData"]              = "Keine Daten."
+L["UI_OpenTradeSkill"]      = "Öffne das Berufshandwerk-Fenster zum Scannen."
+L["UI_TooltipComponents"]   = "Komponenten:"
+L["UI_HeaderCoverage"]      = "%d/%d verfügbar"
+
+-- Debug panel
+L["DEBUG_Title"]            = "GuildCraft - Debug"
+L["DEBUG_ScanBtn"]          = "Berufe scannen"
+L["DEBUG_BroadcastBtn"]     = "Daten senden"
+L["DEBUG_HelloBtn"]         = "Gildendaten anfragen"
+L["DEBUG_ResetDB"]          = "DB zurücksetzen"
+L["DEBUG_MyDataTitle"]      = "Meine gescannten Daten"
+L["DEBUG_LogTitle"]         = "Ereignisprotokoll"
+L["DEBUG_NoData"]           = "Keine Daten gescannt. Öffne einen Beruf oder klicke Scannen."
+L["DEBUG_MembersInDB"]      = "Mitglieder in der Datenbank: %d"
+L["DEBUG_Timestamp"]        = "Letztes Update: %s"
+
+-- Minimap button tooltip
+L["MINIMAP_Title"]          = "GuildCraft"
+L["MINIMAP_TooltipLeft"]    = " Linksklick: Interface öffnen"
+L["MINIMAP_TooltipRight"]   = " Rechtsklick: Debug"
+L["MINIMAP_TooltipDrag"]    = " Ziehen: Schaltfläche verschieben"
+
+-- Filtres de categories
+L["FILTER_weapon"]          = "Waffe"
+L["FILTER_chest"]           = "Brust"
+L["FILTER_gloves"]          = "Handschuhe"
+L["FILTER_boots"]           = "Stiefel"
+L["FILTER_bracers"]         = "Armschienen"
+L["FILTER_back"]            = "Umhang"
+L["FILTER_shield"]          = "Schild"
+L["FILTER_ring"]            = "Ring"
+L["FILTER_head"]            = "Kopf"
+L["FILTER_shoulders"]       = "Schultern"
+L["FILTER_flask"]           = "Fläschchen"
+L["FILTER_potion"]          = "Trank"
+L["FILTER_elixir"]          = "Elixier"
+L["FILTER_transmute"]       = "Transmutation"
+L["FILTER_armor"]           = "Rüstung"
+L["FILTER_bag"]             = "Tasche"
+L["FILTER_gem"]             = "Edelstein"
+L["FILTER_drums"]           = "Trommeln"
+L["FILTER_item"]            = "Gegenstand"
+L["FILTER_helm"]            = "Helm"
+L["FILTER_explosive"]       = "Sprengstoff"
+L["FILTER_legs"]            = "Beine"
+L["FILTER_belt"]            = "Gürtel"
+L["FILTER_cloth"]           = "Stoff"
+L["FILTER_spellfire"]       = "Zauberfeuer"
+L["FILTER_mooncloth"]       = "Mondtuch"
+L["FILTER_shadowweave"]     = "Schattenweben"
+L["FILTER_red"]             = "Rot"
+L["FILTER_blue"]            = "Blau"
+L["FILTER_yellow"]          = "Gelb"
+L["FILTER_orange"]          = "Orange"
+L["FILTER_purple"]          = "Violett"
+L["FILTER_green"]           = "Grün"
+L["FILTER_meta"]            = "Meta"
+L["FILTER_food"]            = "Nahrung"
+
+-- UI redesign
+L["UI_AllProfs"]            = "Alle"
+L["UI_GuildOnly"]           = "Nur Gilde"
+L["UI_SelectRecipe"]        = "Rezept auswählen"
+L["UI_SelectMember"]        = "Mitglied auswählen"
+L["UI_SkillReq"]            = "Rezept"
+L["UI_Reagents"]            = "Materialien:"
+L["UI_Crafters"]            = "Handwerker:"
+L["UI_Wowhead"]             = "Wowhead:"
+L["UI_NoCrafters"]          = "Niemand in der Gilde kennt dieses Rezept."
+L["UI_Whisper"]             = "Flüstern"
+L["UI_LastSeen"]            = "Zuletzt vor %s"
+L["UI_LastSeenNever"]       = "Noch keine Daten"
+L["UI_StaleWarning"]        = "Daten möglicherweise veraltet"
+L["UI_NoRecipes"]           = "Öffne deinen Beruf, um Rezepte zu scannen."
+L["UI_MemberOnline"]        = "Online"
+L["UI_MemberOffline"]       = "Offline"
+L["UI_CrafterCount_one"]    = "1 Handwerker kann dies herstellen:"
+L["UI_CrafterCount_many"]   = "%d Handwerker können dies herstellen:"
+L["UI_AHHint"]              = "Installiere Auctionator oder Auctioneer für aktuelle Reagenzpreise."
