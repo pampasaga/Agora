@@ -1,10 +1,10 @@
--- GuildCraft - Minimap.lua
+-- GuildForge - Minimap.lua
 -- Structure identique a LibDBIcon-1.0 (copie exacte de createButton)
 
-local GC = GuildCraft
-local L  = GuildCraft.L
+local GC = GuildForge
+local L  = GuildForge.L
 
-local button = CreateFrame("Button", "LibDBIcon10_GuildCraft", Minimap)
+local button = CreateFrame("Button", "LibDBIcon10_GuildForge", Minimap)
 button:SetFrameStrata("MEDIUM")
 button:SetFrameLevel(8)
 button:SetSize(31, 31)
@@ -24,8 +24,8 @@ background:SetPoint("TOPLEFT", 7, -5)
 
 local icon = button:CreateTexture(nil, "ARTWORK")
 icon:SetSize(17, 17)
-icon:SetTexture("Interface\\Icons\\INV_Misc_Note_01")
-icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+icon:SetTexture("Interface\\AddOns\\GuildForge\\GuildForge_icon")
+icon:SetTexCoord(0, 1, 0, 1)
 icon:SetPoint("TOPLEFT", 7, -6)
 button.icon = icon
 
@@ -34,7 +34,7 @@ button.icon = icon
 local rad, cos, sin = math.rad, math.cos, math.sin
 
 local function UpdatePosition()
-    local angle  = GuildCraftDB and GuildCraftDB.minimapAngle or 45
+    local angle  = GuildForgeDB and GuildForgeDB.minimapAngle or 45
     local r      = rad(angle)
     local w      = (Minimap:GetWidth()  / 2) + 5
     local h      = (Minimap:GetHeight() / 2) + 5
@@ -51,8 +51,8 @@ button:SetScript("OnDragStart", function(self)
         local scale  = Minimap:GetEffectiveScale()
         cx, cy = cx / scale, cy / scale
         local newAngle = math.deg(math.atan2(cy - my, cx - mx)) % 360
-        if GuildCraftDB then
-            GuildCraftDB.minimapAngle = newAngle
+        if GuildForgeDB then
+            GuildForgeDB.minimapAngle = newAngle
         end
         UpdatePosition()
     end)
@@ -97,8 +97,8 @@ end)
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("PLAYER_LOGIN")
 initFrame:SetScript("OnEvent", function()
-    if GuildCraftDB and not GuildCraftDB.minimapAngle then
-        GuildCraftDB.minimapAngle = 45
+    if GuildForgeDB and not GuildForgeDB.minimapAngle then
+        GuildForgeDB.minimapAngle = 45
     end
     UpdatePosition()
 end)

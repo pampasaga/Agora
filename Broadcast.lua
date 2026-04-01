@@ -1,7 +1,7 @@
--- GuildCraft - Broadcast.lua
+-- GuildForge - Broadcast.lua
 -- Serialization, chunking, sending and receiving guild data
 
-local GC = GuildCraft
+local GC = GuildForge
 
 -- TBC Anniversary compatibility: SendAddonMessage is in C_ChatInfo
 local SendAddonMsg = (C_ChatInfo and C_ChatInfo.SendAddonMessage) or SendAddonMessage
@@ -140,9 +140,9 @@ end
 
 -- Broadcast own data to the entire guild
 function GC:SendMyData()
-    if not IsInGuild() or not GuildCraftDB then return end
+    if not IsInGuild() or not GuildForgeDB then return end
     local myKey = GC:GetMyKey()
-    local data  = GuildCraftDB.members[myKey]
+    local data  = GuildForgeDB.members[myKey]
     if not data then return end
     -- Do not broadcast if no profession scanned (avoids overwriting others' data)
     if not data.professions or #data.professions == 0 then return end
@@ -155,13 +155,36 @@ function GC:SendHello()
     SendAddonMsg(GC.PREFIX, "HELLO" .. CHUNK_SEP .. GC:GetMyKey(), "GUILD")
 end
 
+-- Broadcast own version string so guildmates can detect updates
+function GC:SendVersion()
+    if not IsInGuild() then return end
+    SendAddonMsg(GC.PREFIX, "VERSION" .. CHUNK_SEP .. GC.VERSION_STRING, "GUILD")
+end
+
+-- Compare two semver strings ("1.2.3"). Returns 1 if a > b, -1 if a < b, 0 if equal.
+local function compareVersions(a, b)
+    local function parts(v)
+        local t = {}
+        for n in v:gmatch("%d+") do t[#t + 1] = tonumber(n) end
+        return t
+    end
+    local pa, pb = parts(a), parts(b)
+    for i = 1, math.max(#pa, #pb) do
+        local va = pa[i] or 0
+        local vb = pb[i] or 0
+        if va > vb then return  1 end
+        if va < vb then return -1 end
+    end
+    return 0
+end
+
 -- Send all stored data (response to a HELLO)
 -- Random delay to prevent everyone from responding at the same time
 function GC:SendFullGuildData()
-    if not GuildCraftDB then return end
+    if not GuildForgeDB then return end
     local delay = math.random() * 3  -- 0-3s random
     local extra = 0
-    for key, memberData in pairs(GuildCraftDB.members) do
+    for key, memberData in pairs(GuildForgeDB.members) do
         local k, d = key, memberData
         GC:After(delay + extra, function()
             GC:SendChunked(k, GC:Serialize(d))
@@ -220,14 +243,27 @@ function GC:OnMessage(sender, message)
             local memberData = GC:Deserialize(full)
             if memberData and memberData.name ~= "" then
                 local key = memberData.name .. "-" .. memberData.realm
-                local existing = GuildCraftDB.members[key]
+                local existing = GuildForgeDB.members[key]
                 if not existing or memberData.timestamp >= existing.timestamp then
-                    GuildCraftDB.members[key] = memberData
-                    print("|cff00ccffGuildCraft:|r Donnees recues de " .. memberData.name .. ".")
+                    GuildForgeDB.members[key] = memberData
+                    print("|cff00ccffGuildForge:|r Donnees recues de " .. memberData.name .. ".")
                     if GC.mainFrame and GC.mainFrame:IsShown() then
                         GC:RefreshUI()
                     end
                 end
+            end
+        end
+
+    -- A member is broadcasting their addon version
+    elseif msgType == "VERSION" then
+        local theirVersion = parts[2]
+        if theirVersion and not GC._newerVersionKnown then
+            if compareVersions(theirVersion, GC.VERSION_STRING) > 0 then
+                GC._newerVersionKnown = true
+                GC._newerVersionSeen  = theirVersion
+                print("|cff00ccffGuildForge:|r " .. string.format(
+                    GuildForge.L["CORE_NewVersion"], theirVersion))
+                if GC.UpdateFooterVersion then GC:UpdateFooterVersion() end
             end
         end
 

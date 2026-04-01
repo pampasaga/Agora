@@ -1,9 +1,9 @@
--- GuildCraft - UI.lua
+-- GuildForge - UI.lua
 -- Main interface: Recipes view (split panel) + Members view
 -- Window 820x580, left panel = list, right panel = detail
 
-local GC = GuildCraft
-local L  = GuildCraft.L
+local GC = GuildForge
+local L  = GuildForge.L
 
 -- General dimensions
 local UI_W      = 820
@@ -749,9 +749,20 @@ local function CreateDetailPanel(parent, x, y, w, h)
     bg:SetAllPoints()
     bg:SetColorTexture(0.03, 0.015, 0.005, 0.6)
 
+    -- Empty state icon (shown alongside hint)
+    local emptyIcon = panel:CreateTexture(nil, "ARTWORK")
+    emptyIcon:SetSize(52, 52)
+    emptyIcon:SetTexture("Interface\\AddOns\\GuildForge\\GuildForge_icon")
+    emptyIcon:SetPoint("CENTER", panel, "CENTER", 0, 30)
+    emptyIcon:SetAlpha(0.25)
+    emptyIcon:Hide()
+    panel.emptyIcon = emptyIcon
+
     -- Hint shown when nothing is selected
     local hint = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    hint:SetPoint("CENTER", panel, "CENTER", 0, 0)
+    hint:SetPoint("CENTER", panel, "CENTER", 0, -36)
+    hint:SetJustifyH("CENTER")
+    hint:SetWidth(220)
     hint:SetTextColor(0.45, 0.4, 0.3)
     panel.hint = hint
 
@@ -1100,6 +1111,7 @@ local function ShowRecipeDetail(panel, entry, onlineCache)
     end
     panel:Show()
     panel.hint:Hide()
+    if panel.emptyIcon then panel.emptyIcon:Hide() end
     panel.topBg:Show()
     panel.detailIcon:Show()
     if panel.detailIconHit then panel.detailIconHit:Show() end
@@ -1408,6 +1420,7 @@ local function ShowMemberDetail(panel, memberName, dbMember)
     HideSearchResults(panel)
     panel:Show()
     panel.hint:Hide()
+    if panel.emptyIcon then panel.emptyIcon:Hide() end
     -- Hide recipe widgets if they exist
     if panel.topBg then panel.topBg:Hide() end
     if panel.detailIcon then panel.detailIcon:Hide() end
@@ -1514,7 +1527,7 @@ local function ShowMemberDetail(panel, memberName, dbMember)
             empty:SetText(C_GRAY .. "Ouvrez vos fenetres de metiers\npour scanner vos patrons." .. C_RESET)
         else
             empty:SetText(C_GRAY .. "Demandez a " .. memberName
-                .. " de telecharger GuildCraft\net d'ouvrir ses metiers pour scanner ses patrons." .. C_RESET)
+                .. " de telecharger GuildForge\net d'ouvrir ses metiers pour scanner ses patrons." .. C_RESET)
         end
         table.insert(w.scrollChild._profRows, empty)
         sy = sy - 36
@@ -1634,7 +1647,7 @@ function GC:CreateUI()
     if GC.mainFrame then return end
 
     local template = BackdropTemplateMixin and "BackdropTemplate" or nil
-    local frame = CreateFrame("Frame", "GuildCraftMainFrame", UIParent, template)
+    local frame = CreateFrame("Frame", "GuildForgeMainFrame", UIParent, template)
     frame:SetFrameStrata("HIGH")
     frame:SetSize(UI_W, UI_H)
     frame:SetPoint("CENTER")
@@ -1645,18 +1658,18 @@ function GC:CreateUI()
     frame:SetScript("OnDragStop",  frame.StopMovingOrSizing)
     frame:SetClampedToScreen(true)
     frame:Hide()
-    tinsert(UISpecialFrames, "GuildCraftMainFrame")
+    tinsert(UISpecialFrames, "GuildForgeMainFrame")
 
     -- Dark backdrop
     if frame.SetBackdrop then
         frame:SetBackdrop({
             bgFile   = "Interface\\DialogFrame\\UI-DialogBox-Background",
-            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Gold-Border",
             tile = true, tileSize = 32, edgeSize = 32,
             insets = { left = 11, right = 12, top = 12, bottom = 11 },
         })
         frame:SetBackdropColor(0.06, 0.04, 0.01, 1.0)
-        frame:SetBackdropBorderColor(0.55, 0.45, 0.1, 1)
+        frame:SetBackdropBorderColor(0.6, 0.48, 0.18, 0.85)
     end
 
     -- Extra solid background to ensure opacity (UI-DialogBox-Background is semi-transparent)
@@ -1681,28 +1694,55 @@ function GC:CreateUI()
     titleSep:SetTexture("Interface\\FriendsFrame\\UI-FriendsFrame-OnlineDivider")
     titleSep:SetVertexColor(0.6, 0.45, 0.1, 0.8)
 
-    -- Centered title
+    -- Title icon + text
+    local titleIcon = frame:CreateTexture(nil, "OVERLAY")
+    titleIcon:SetSize(20, 20)
+    titleIcon:SetTexture("Interface\\AddOns\\GuildForge\\GuildForge_icon")
+    titleIcon:SetPoint("TOP", frame, "TOP", -50, -(8 + TITLE_H / 2 - 10))
+
     local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    title:SetPoint("TOP", frame, "TOP", 0, -(8 + TITLE_H / 2 - 6))
-    title:SetText(C_GOLD .. "GuildCraft" .. C_RESET)
+    title:SetPoint("TOP", frame, "TOP", 8, -(8 + TITLE_H / 2 - 6))
+    title:SetText(C_GOLD .. "GuildForge" .. C_RESET)
 
     -- Close button
     local closeBtn = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
     closeBtn:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -4, -4)
     closeBtn:SetScript("OnClick", function() frame:Hide() end)
 
-    -- ── View selector (Recipes / Members buttons) + SearchBox ──
+    -- ── Action bar (WeakAuras style: inline text links, no box buttons) ──
     local topY = 8 + TITLE_H + 2 + 6  -- below title bar + separator + margin
 
-    local btnPatrons = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-    btnPatrons:SetSize(110, 24)
-    btnPatrons:SetPoint("TOPLEFT", frame, "TOPLEFT", 14, -topY)
+    local actionBg = frame:CreateTexture(nil, "BACKGROUND", nil, 1)
+    actionBg:SetHeight(VIEW_H)
+    actionBg:SetPoint("TOPLEFT",  frame, "TOPLEFT",  12, -topY)
+    actionBg:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -12, -topY)
+    actionBg:SetColorTexture(0.035, 0.02, 0.005, 0.85)
+
+    local actionSepBot = frame:CreateTexture(nil, "BORDER")
+    actionSepBot:SetHeight(1)
+    actionSepBot:SetPoint("TOPLEFT",  frame, "TOPLEFT",  12, -(topY + VIEW_H))
+    actionSepBot:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -12, -(topY + VIEW_H))
+    actionSepBot:SetColorTexture(0.5, 0.38, 0.08, 0.45)
+
+    local btnPatrons = CreateFrame("Button", nil, frame)
+    btnPatrons:SetSize(120, VIEW_H)
+    btnPatrons:SetPoint("TOPLEFT", frame, "TOPLEFT", 20, -topY)
+    btnPatrons:SetNormalFontObject("GameFontNormal")
+    btnPatrons:SetHighlightFontObject("GameFontNormal")
+    btnPatrons:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestLogTitleHighlight", "ADD")
+    local bpHL = btnPatrons:GetHighlightTexture()
+    if bpHL then bpHL:SetVertexColor(0.6, 0.5, 0.1) end
     btnPatrons:SetText(L["UI_TabByRecipe"])
     frame.btnPatrons = btnPatrons
 
-    local btnMembres = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-    btnMembres:SetSize(110, 24)
-    btnMembres:SetPoint("LEFT", btnPatrons, "RIGHT", 4, 0)
+    local btnMembres = CreateFrame("Button", nil, frame)
+    btnMembres:SetSize(120, VIEW_H)
+    btnMembres:SetPoint("LEFT", btnPatrons, "RIGHT", 14, 0)
+    btnMembres:SetNormalFontObject("GameFontNormal")
+    btnMembres:SetHighlightFontObject("GameFontNormal")
+    btnMembres:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestLogTitleHighlight", "ADD")
+    local bmHL = btnMembres:GetHighlightTexture()
+    if bmHL then bmHL:SetVertexColor(0.6, 0.5, 0.1) end
     btnMembres:SetText(L["UI_TabByMember"])
     frame.btnMembres = btnMembres
 
@@ -1760,7 +1800,7 @@ function GC:CreateUI()
     sbIcon:SetVertexColor(0.8, 0.75, 0.5, 0.9)
 
     -- EditBox
-    local searchBox = CreateFrame("EditBox", "GuildCraftSearchBox", sbContainer)
+    local searchBox = CreateFrame("EditBox", "GuildForgeSearchBox", sbContainer)
     searchBox:SetFontObject("GameFontNormalSmall")
     searchBox:SetAutoFocus(false)
     searchBox:SetMaxLetters(60)
@@ -1813,7 +1853,7 @@ function GC:CreateUI()
     local guildOnlyChk = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
     guildOnlyChk:SetSize(22, 22)
     local guildOnlyLbl = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    guildOnlyLbl:SetText(C_GRAY .. "Obtenus seulement" .. C_RESET)
+    guildOnlyLbl:SetText(C_GRAY .. (L["UI_GuildOnly"] or "Guild only") .. C_RESET)
     guildOnlyLbl:SetPoint("RIGHT", sbContainer, "LEFT", -36, 0)
     guildOnlyChk:SetPoint("LEFT",  guildOnlyLbl, "RIGHT", 2, 1)
     guildOnlyChk:SetChecked(GC.showGuildOnly)
@@ -1846,7 +1886,7 @@ function GC:CreateUI()
     local prevExpChk = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
     prevExpChk:SetSize(22, 22)
     local prevExpLbl = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    prevExpLbl:SetText(C_GRAY .. "Inclure Vanilla" .. C_RESET)
+    prevExpLbl:SetText(C_GRAY .. (L["UI_IncludeVanilla"] or "Include Vanilla") .. C_RESET)
     prevExpLbl:SetPoint("RIGHT", guildOnlyLbl, "LEFT", -36, 0)
     prevExpChk:SetPoint("LEFT", prevExpLbl, "RIGHT", 2, 1)
     prevExpChk:SetChecked(GC.showPrevExp)
@@ -1882,21 +1922,20 @@ function GC:CreateUI()
     -- Vertical divider between left and right panels
     local divider = frame:CreateTexture(nil, "BORDER")
     divider:SetWidth(1)
-    divider:SetPoint("TOPLEFT",    frame, "TOPLEFT",  14 + LEFT_W, -(contentY))
-    divider:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 14 + LEFT_W, 12)
-    divider:SetTexture("Interface\\FriendsFrame\\UI-FriendsFrame-OnlineDivider")
-    divider:SetVertexColor(0.4, 0.3, 0.08, 0.5)
+    divider:SetPoint("TOPLEFT",    frame, "TOPLEFT",  14 + LEFT_W, -(contentY + 26))
+    divider:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 14 + LEFT_W, 42)
+    divider:SetColorTexture(0.5, 0.38, 0.1, 0.3)
 
     -- ── Left panel: scroll frame list ──
     local listY = contentY + 26  -- room for catArea (22px) + gap (4px)
-    local scrollLeft = CreateFrame("ScrollFrame", "GuildCraftScrollLeft", frame,
+    local scrollLeft = CreateFrame("ScrollFrame", "GuildForgeScrollLeft", frame,
                                     "UIPanelScrollFrameTemplate")
     scrollLeft:SetPoint("TOPLEFT",    frame, "TOPLEFT",  14, -listY)
-    scrollLeft:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 14, 12)
+    scrollLeft:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 14, 42)
     scrollLeft:SetWidth(LEFT_W - 20)
     frame.scrollLeft = scrollLeft
 
-    local contentLeft = CreateFrame("Frame", "GuildCraftContentLeft", scrollLeft)
+    local contentLeft = CreateFrame("Frame", "GuildForgeContentLeft", scrollLeft)
     contentLeft:SetWidth(LEFT_W - 38)
     contentLeft:SetHeight(1)
     scrollLeft:SetScrollChild(contentLeft)
@@ -1907,9 +1946,190 @@ function GC:CreateUI()
     local detailW = UI_W - detailX - 14
 
     local detailPanel = CreateDetailPanel(frame, detailX, listY, detailW,
-                                           UI_H - listY - 14)
+                                           UI_H - listY - 42)
     detailPanel:Show()
     frame.detailPanel = detailPanel
+
+    -- ── Footer bar (WeakAuras style) ──
+    local footerSep = frame:CreateTexture(nil, "BORDER")
+    footerSep:SetHeight(1)
+    footerSep:SetPoint("BOTTOMLEFT",  frame, "BOTTOMLEFT",  12, 40)
+    footerSep:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -12, 40)
+    footerSep:SetColorTexture(0.5, 0.38, 0.08, 0.5)
+
+    local footerBg = frame:CreateTexture(nil, "BACKGROUND", nil, 1)
+    footerBg:SetPoint("BOTTOMLEFT",  frame, "BOTTOMLEFT",  12, 9)
+    footerBg:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -12, 40)
+    footerBg:SetColorTexture(0.035, 0.02, 0.005, 0.9)
+
+    -- Copyable link popup (shared by all footer links)
+    local linkPopup = CreateFrame("Frame", "GuildForgeLinkPopup", UIParent,
+                                  BackdropTemplateMixin and "BackdropTemplate" or nil)
+    linkPopup:SetSize(360, 108)
+    linkPopup:SetPoint("CENTER")
+    linkPopup:SetFrameStrata("DIALOG")
+    linkPopup:SetMovable(true)
+    linkPopup:EnableMouse(true)
+    linkPopup:RegisterForDrag("LeftButton")
+    linkPopup:SetScript("OnDragStart", linkPopup.StartMoving)
+    linkPopup:SetScript("OnDragStop",  linkPopup.StopMovingOrSizing)
+    -- Escape handling: close popup first, then main frame on second press.
+    -- We do this by removing the main frame from UISpecialFrames while the
+    -- popup is open, so CloseSpecialWindows() doesn't close both at once.
+    local function removeMainFromSpecial()
+        for i = #UISpecialFrames, 1, -1 do
+            if UISpecialFrames[i] == "GuildForgeMainFrame" then
+                table.remove(UISpecialFrames, i)
+                break
+            end
+        end
+    end
+    local function addMainToSpecial()
+        for _, v in ipairs(UISpecialFrames) do
+            if v == "GuildForgeMainFrame" then return end
+        end
+        tinsert(UISpecialFrames, "GuildForgeMainFrame")
+    end
+
+    linkPopup:SetScript("OnShow", function()
+        removeMainFromSpecial()
+        -- Register popup so Escape closes it (not the GameMenu)
+        local found = false
+        for _, v in ipairs(UISpecialFrames) do
+            if v == "GuildForgeLinkPopup" then found = true; break end
+        end
+        if not found then tinsert(UISpecialFrames, "GuildForgeLinkPopup") end
+    end)
+    linkPopup:SetScript("OnHide", function()
+        for i = #UISpecialFrames, 1, -1 do
+            if UISpecialFrames[i] == "GuildForgeLinkPopup" then
+                table.remove(UISpecialFrames, i); break
+            end
+        end
+        addMainToSpecial()
+    end)
+    if linkPopup.SetBackdrop then
+        linkPopup:SetBackdrop({
+            bgFile   = "Interface\\DialogFrame\\UI-DialogBox-Background",
+            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Gold-Border",
+            tile = true, tileSize = 32, edgeSize = 32,
+            insets = { left = 11, right = 12, top = 12, bottom = 11 },
+        })
+        linkPopup:SetBackdropColor(0.06, 0.04, 0.01, 0.98)
+        linkPopup:SetBackdropBorderColor(0.85, 0.68, 0.22, 1)
+    end
+    linkPopup:Hide()
+
+    local popupMsg = linkPopup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    popupMsg:SetPoint("TOP", linkPopup, "TOP", 0, -16)
+    popupMsg:SetText("")
+    linkPopup.msg = popupMsg
+
+    local popupDesc = linkPopup:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    popupDesc:SetPoint("TOP", popupMsg, "BOTTOM", 0, -4)
+    popupDesc:SetTextColor(0.6, 0.6, 0.6)
+    popupDesc:SetText("")
+    linkPopup.desc = popupDesc
+
+    local popupBox = CreateFrame("EditBox", "GuildForgeLinkBox", linkPopup)
+    popupBox:SetFontObject("GameFontNormalSmall")
+    popupBox:SetPoint("TOPLEFT",     popupDesc, "BOTTOMLEFT",  0, -8)
+    popupBox:SetPoint("BOTTOMRIGHT", linkPopup, "BOTTOMRIGHT", -40, 16)
+    popupBox:SetAutoFocus(false)
+    popupBox:SetMaxLetters(256)
+    popupBox:SetScript("OnEscapePressed", function() linkPopup:Hide() end)
+    popupBox:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
+
+    local popupClose = CreateFrame("Button", nil, linkPopup, "UIPanelCloseButton")
+    popupClose:SetPoint("TOPRIGHT", linkPopup, "TOPRIGHT", -2, -2)
+    popupClose:SetScript("OnClick", function() linkPopup:Hide() end)
+
+    linkPopup.Open = function(_, title, desc, url)
+        popupMsg:SetText(C_GOLD .. title .. "|r")
+        popupDesc:SetText(desc)
+        if url and url ~= "" then
+            popupBox:SetText(url)
+            popupBox:Show()
+            linkPopup:SetHeight(130)
+            popupBox:SetFocus()
+            popupBox:HighlightText()
+        else
+            popupBox:Hide()
+            linkPopup:SetHeight(95)
+        end
+        linkPopup:Show()
+    end
+
+    -- Left: footer link buttons
+    local function MakeFooterLink(parent, text, title, desc, url)
+        local btn = CreateFrame("Button", nil, parent)
+        btn:SetHeight(28)
+        btn:SetWidth(80)
+        local fs = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        fs:SetAllPoints()
+        fs:SetJustifyH("CENTER")
+        fs:SetText("|cff5a6e68" .. text .. "|r")
+        btn:SetScript("OnEnter", function()
+            fs:SetText("|cffaac4bc" .. text .. "|r")
+        end)
+        btn:SetScript("OnLeave", function()
+            fs:SetText("|cff5a6e68" .. text .. "|r")
+        end)
+        btn:SetScript("OnClick", function()
+            linkPopup:Open(title, desc, url)
+        end)
+        return btn
+    end
+
+    local footerGH = MakeFooterLink(frame, "GitHub",
+        L["LINK_GitHub_Title"], L["LINK_GitHub_Desc"], "github.com/pampasaga")
+    footerGH:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 18, 9)
+
+    local footerCF = MakeFooterLink(frame, "CurseForge",
+        L["LINK_CurseForge_Title"], L["LINK_CurseForge_Desc"], "curseforge.com/wow/addons/guildforge")
+    footerCF:SetPoint("LEFT", footerGH, "RIGHT", 8, 0)
+
+    -- Ko-fi: uncomment when the page is ready to be promoted
+    -- local footerKF = MakeFooterLink(frame, "Ko-fi",
+    --     L["LINK_Kofi_Title"], L["LINK_Kofi_Desc"], "ko-fi.com/pampasaga")
+    -- footerKF:SetPoint("LEFT", footerCF, "RIGHT", 8, 0)
+
+    -- Right: Pampasaga branding (clickable credits)
+    local footerBrand = CreateFrame("Button", nil, frame)
+    footerBrand:SetSize(160, 28)
+    footerBrand:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -18, 9)
+    local fbFS = footerBrand:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    fbFS:SetAllPoints()
+    fbFS:SetJustifyH("RIGHT")
+    fbFS:SetText("|cff2d3d38Pampasaga-Spineshatter|r")
+    footerBrand:SetScript("OnEnter", function()
+        fbFS:SetText("|cff5a7a70Pampasaga-Spineshatter|r")
+    end)
+    footerBrand:SetScript("OnLeave", function()
+        fbFS:SetText("|cff2d3d38Pampasaga-Spineshatter|r")
+    end)
+    footerBrand:SetScript("OnClick", function()
+        linkPopup:Open(L["LINK_Credits_Title"], L["LINK_Credits_Msg"], "")
+    end)
+
+    -- Version label: top-left corner
+    local footerVer = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    footerVer:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -14)
+    footerVer:SetText("|cff2a3d34v" .. GC.VERSION_STRING .. "|r")
+    GC.footerVersionLabel = footerVer
+
+    function GC:UpdateFooterVersion()
+        if not GC.footerVersionLabel then return end
+        if GC._newerVersionSeen then
+            GC.footerVersionLabel:SetText(
+                "|cff2a3d34v" .. GC.VERSION_STRING .. "|r  " ..
+                "|cffff9900" .. (L["CORE_UpdateAvailable"] or "Update available!") .. "|r")
+        else
+            GC.footerVersionLabel:SetText("|cff2a3d34v" .. GC.VERSION_STRING .. "|r")
+        end
+    end
+
+    frame:HookScript("OnShow", function() GC:UpdateFooterVersion() end)
 
     GC.mainFrame = frame
     GC:BuildTabs()
@@ -1980,60 +2200,50 @@ function GC:BuildTabs()
         btn:SetHeight(TABS_H - 4)
         btn:SetPoint("LEFT", tabArea, "LEFT", x, 0)
 
-        -- Icon (36x36 for professions, not for "All")
         local icon = profKey and PROF_ICONS[profKey]
-        local iconOffset = 0
+        local ic = nil
+
         if icon then
-            local ic = btn:CreateTexture(nil, "ARTWORK")
+            -- Square button sized to icon
+            btn:SetSize(TABS_H - 4, TABS_H - 4)
+            ic = btn:CreateTexture(nil, "ARTWORK")
             ic:SetSize(30, 30)
-            ic:SetPoint("LEFT", btn, "LEFT", 3, 0)
+            ic:SetPoint("CENTER", btn, "CENTER", 0, 0)
             ic:SetTexture(icon)
-            iconOffset = 34
-        end
-
-        local lbl = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        lbl:SetPoint("LEFT", btn, "LEFT", iconOffset + 3, 0)
-        if profKey then
-            lbl:SetText("")  -- Icon only for professions that have one
+            ic:SetVertexColor(0.6, 0.6, 0.6)
         else
+            -- "All" text button
+            local lbl = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            lbl:SetPoint("CENTER", btn, "CENTER", 0, 0)
             lbl:SetText(profName)
+            btn:SetWidth(lbl:GetStringWidth() + 14)
         end
-
-        local lblW = lbl:GetStringWidth()
-        btn:SetWidth(iconOffset + lblW + 10)
+        btn.ic = ic
 
         local bg = btn:CreateTexture(nil, "BACKGROUND")
         bg:SetAllPoints()
         btn.bg = bg
 
-        -- Gold selection bar at the bottom (native WoW tab style)
+        -- Gold selection bar at the bottom
         local activeLine = btn:CreateTexture(nil, "OVERLAY")
         activeLine:SetHeight(3)
-        activeLine:SetPoint("BOTTOMLEFT",  btn, "BOTTOMLEFT",  0, 0)
-        activeLine:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", 0, 0)
-        activeLine:SetColorTexture(1, 0.82, 0.0, 1)
+        activeLine:SetPoint("BOTTOMLEFT",  btn, "BOTTOMLEFT",  2, 0)
+        activeLine:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -2, 0)
+        activeLine:SetColorTexture(0.9, 0.72, 0.2, 1)
         activeLine:Hide()
         btn.activeLine = activeLine
-
-        -- Selection highlight in native WoW style
-        local activeBorder = btn:CreateTexture(nil, "OVERLAY")
-        activeBorder:SetTexture("Interface\\Buttons\\ButtonHilight-Square")
-        activeBorder:SetBlendMode("ADD")
-        activeBorder:SetAllPoints(btn)
-        activeBorder:Hide()
-        btn.activeBorder = activeBorder
 
         local function updateBg()
             local active = (profKey == nil and GC.selectedProf == nil)
                         or (profKey ~= nil and profKey == GC.selectedProf)
             if active then
-                bg:SetColorTexture(0.28, 0.18, 0.04, 1.0)
+                bg:SetColorTexture(0.22, 0.14, 0.03, 1.0)
                 activeLine:Show()
-                activeBorder:Show()
+                if btn.ic then btn.ic:SetVertexColor(1, 1, 1) end
             else
                 bg:SetColorTexture(0.10, 0.06, 0.01, 0.8)
                 activeLine:Hide()
-                activeBorder:Hide()
+                if btn.ic then btn.ic:SetVertexColor(0.6, 0.6, 0.6) end
             end
         end
         updateBg()
@@ -2051,7 +2261,8 @@ function GC:BuildTabs()
             GC:RefreshUI()
         end)
         btn:SetScript("OnEnter", function(self)
-            self.bg:SetColorTexture(0.45, 0.28, 0.07, 1)
+            self.bg:SetColorTexture(0.35, 0.22, 0.05, 1)
+            if btn.ic then btn.ic:SetVertexColor(1, 0.92, 0.6) end
             if profKey then
                 GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
                 GameTooltip:AddLine(PROF_DISPLAY[profName] or profName, 1, 1, 0)
@@ -2599,12 +2810,12 @@ local function RefreshMembresLeft(content)
     end
 
     if #onlineList > 0 then
-        AddSeparator("Online (" .. #onlineList .. ")")
+        AddSeparator(string.format(L["UI_OnlineMembers"] or "Online (%d)", #onlineList))
         for _, gm in ipairs(onlineList)  do AddMemberRow(gm) end
     end
     if #offlineList > 0 then
         if #onlineList > 0 then y = y - 4 end
-        AddSeparator("Offline (" .. #offlineList .. ")")
+        AddSeparator(string.format(L["UI_OfflineMembers"] or "Offline (%d)", #offlineList))
         for _, gm in ipairs(offlineList) do AddMemberRow(gm) end
     end
 
@@ -2644,10 +2855,10 @@ function GC:RefreshUI()
     end
     frame.btnPatrons:SetText(isPatrons
         and (C_GOLD .. L["UI_TabByRecipe"] .. C_RESET)
-        or  L["UI_TabByRecipe"])
+        or  (C_GRAY .. L["UI_TabByRecipe"] .. C_RESET))
     frame.btnMembres:SetText(not isPatrons
         and (C_GOLD .. L["UI_TabByMember"] .. C_RESET)
-        or  L["UI_TabByMember"])
+        or  (C_GRAY .. L["UI_TabByMember"] .. C_RESET))
 
     -- Rebuild category / specialization filters
     GC:BuildCatFilters()
@@ -2701,7 +2912,7 @@ function GC:RefreshUI()
                 .. C_RESET)
         elseif not IsInGuild() then
             row.lfs:SetText(C_GRAY
-                .. "Join a guild to share\nyour recipes and see your guildmates'."
+                .. (L["UI_NoGuild"] or "Join a guild to share\nyour recipes with your guildmates.")
                 .. C_RESET)
         else
             row.lfs:SetText(C_GRAY .. (L["UI_NoData"] or "No data.") .. C_RESET)
@@ -2754,6 +2965,7 @@ function GC:RefreshUI()
     -- Guild specialization summary (shown when no member is selected)
     local function ShowSpecializationSummary(panel)
         panel.hint:Hide()
+        if panel.emptyIcon then panel.emptyIcon:Hide() end
 
         -- Collect spec -> [member names]
         local specMap = {}   -- specName -> { members = {}, profName }
@@ -2791,7 +3003,7 @@ function GC:RefreshUI()
             local lbl = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             lbl:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, y)
             lbl:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -10, y)
-            lbl:SetText(C_GRAY .. "No specialization known in the guild.\n\nType /gcr scan to scan your professions." .. C_RESET)
+            lbl:SetText(C_GRAY .. (L["UI_NoSpecialization"] or "No specialization data in the guild.") .. C_RESET)
             lbl:SetJustifyH("LEFT")
             AddWidget(lbl)
             return
@@ -2799,7 +3011,7 @@ function GC:RefreshUI()
 
         local titleLbl = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         titleLbl:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, y)
-        titleLbl:SetText(C_GOLD .. "Guild specializations" .. C_RESET)
+        titleLbl:SetText(C_GOLD .. (L["UI_GuildSpecializations"] or "Guild specializations") .. C_RESET)
         titleLbl:SetJustifyH("LEFT")
         AddWidget(titleLbl)
         y = y - 22
@@ -2820,7 +3032,7 @@ function GC:RefreshUI()
             hdrLbl:SetPoint("RIGHT", hdr, "RIGHT", -4, 0)
             local count = #entry.data.members
             hdrLbl:SetText(C_GOLD .. entry.spec .. C_RESET
-                .. "  " .. C_GREEN .. count .. " member" .. (count > 1 and "s" or "") .. C_RESET)
+                .. "  " .. C_GREEN .. (count == 1 and (L["UI_MemberCount_one"] or "1 member") or string.format(L["UI_MemberCount_many"] or "%d members", count)) .. C_RESET)
             AddWidget(hdr)
             y = y - 22
 
@@ -2847,6 +3059,7 @@ function GC:RefreshUI()
     local function ShowSearchResults(panel, cache)
         HideDetailWidgets(panel)
         panel.hint:Hide()
+        if panel.emptyIcon then panel.emptyIcon:Hide() end
         panel:Show()
 
         local search  = GC.currentSearch
@@ -2907,30 +3120,19 @@ function GC:RefreshUI()
         sc:SetHeight(math.max(shown * 22, 1))
     end
 
-    -- Build the onboarding message if the player has no data yet
+    -- Build the onboarding message if nobody in the guild has any recipe data yet
     local function GetOnboardingHint()
-        local myKey = GC._myKey or (UnitName and UnitName("player") and GetRealmName
-                      and (UnitName("player") .. "-" .. GetRealmName()) or nil)
-        local hasMyData = myKey and GuildCraftDB and GuildCraftDB.members
-                          and GuildCraftDB.members[myKey]
-                          and GuildCraftDB.members[myKey].professions
-        local hasRecipes = false
-        if hasMyData then
-            for _, prof in ipairs(GuildCraftDB.members[myKey].professions) do
-                if prof.recipes and #prof.recipes > 0 then
-                    hasRecipes = true; break
+        if not IsInGuild() then return nil end
+        -- If any guild member has recipes, the list has content: just show "Select a recipe"
+        if GuildForgeDB and GuildForgeDB.members then
+            for _, member in pairs(GuildForgeDB.members) do
+                for _, prof in ipairs(member.professions or {}) do
+                    if prof.recipes and #prof.recipes > 0 then return nil end
                 end
             end
         end
-        if not hasRecipes then
-            -- Red warning: no recipes synced yet
-            return "|cffff4444" ..
-                   "Open each profession window\n" ..
-                   "to sync your recipes\n" ..
-                   "with your guildmates.\n\n" ..
-                   "|cffaaaaaa(Profession icon > right-click > Open)"
-        end
-        return nil
+        return "|cffff4444" ..
+               (L["UI_OnboardingMain"] or "Open each profession window\nto sync your recipes\nwith your guildmates.")
     end
 
     if isPatrons then
@@ -2944,6 +3146,7 @@ function GC:RefreshUI()
                 dp.hint:SetText(C_GRAY .. (L["UI_SelectRecipe"] or "Select a recipe") .. C_RESET)
             end
             dp.hint:Show()
+            if dp.emptyIcon then dp.emptyIcon:Show() end
             dp:Show()
         else
             ShowRecipeDetail(dp, GC.selectedRecipe, onlineCache)
@@ -2992,7 +3195,7 @@ function GC:ToggleUI()
         end
     end)
     if not ok then
-        print("|cffff0000" .. (L["CORE_ErrorPrefix"] or "GuildCraft error: ") .. "|r"
+        print("|cffff0000" .. (L["CORE_ErrorPrefix"] or "GuildForge error: ") .. "|r"
               .. tostring(err))
     end
 end

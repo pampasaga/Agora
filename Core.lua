@@ -1,27 +1,26 @@
--- GuildCraft - Core.lua
+-- GuildForge - Core.lua
 -- Namespace, initialization, event management
 
-GuildCraft = {}
-local GC = GuildCraft
+GuildForge = {}
+local GC = GuildForge
 
 -- Slash commands first, before any code that could crash
-SLASH_GUILDCRAFT1 = "/guildcraft"
-SLASH_GUILDCRAFT2 = "/gcr"
-SLASH_GUILDCRAFT3 = "/gct"
-SlashCmdList["GUILDCRAFT"] = function(msg)
+SLASH_GUILDFORGE1 = "/guildforge"
+SLASH_GUILDFORGE2 = "/gf"
+SlashCmdList["GUILDFORGE"] = function(msg)
     if GC.ToggleUI then
         local ok, err = pcall(function()
             if msg == "scan" then
                 GC:ScanProfessionLevels()
                 GC:SendMyData()
-                print("|cff00ff00GuildCraft:|r Scan done.")
+                print("|cff00ff00GuildForge:|r " .. (GuildForge.L and GuildForge.L["CORE_ScanDone"] or "Scan done."))
             elseif msg == "debug" then
                 GC:ToggleDebug()
             else
                 GC:ToggleUI()
             end
         end)
-        if not ok then print("|cffff0000GuildCraft:|r " .. tostring(err)) end
+        if not ok then print("|cffff0000GuildForge:|r " .. tostring(err)) end
     end
 end
 
@@ -59,8 +58,8 @@ elseif RegisterAddonMessagePrefix then
 end
 
 -- Immediate DB initialization
-if not GuildCraftDB then
-    GuildCraftDB = { members = {}, version = GC.VERSION }
+if not GuildForgeDB then
+    GuildForgeDB = { members = {}, version = GC.VERSION }
 end
 
 -- Main event frame
@@ -149,7 +148,7 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
             GC:After(0.5, function()
                 GC:ScanProfessionLevels()
                 GC:SendMyData()
-                print("|cff00ccffGuildCraft:|r Nouveau patron appris, sync envoyee.")
+                print("|cff00ccffGuildForge:|r " .. (GuildForge.L and GuildForge.L["CORE_NewRecipeLearned"] or "New recipe learned, synced with the guild."))
             end)
         end
 
@@ -208,8 +207,8 @@ function GC:GetMyKey()
 end
 
 function GC:OnLogin()
-    if not GuildCraftDB then
-        GuildCraftDB = { members = {}, version = GC.VERSION }
+    if not GuildForgeDB then
+        GuildForgeDB = { members = {}, version = GC.VERSION }
     end
 
     -- Scan always runs, in guild or not
@@ -217,12 +216,23 @@ function GC:OnLogin()
         GC:ScanProfessionLevels()
         GC._initComplete = true
 
+        -- Check if any recipes are already in the DB
+        local myKey = GC:GetMyKey()
+        local hasRecipes = false
+        local member = GuildForgeDB and GuildForgeDB.members and GuildForgeDB.members[myKey]
+        if member then
+            for _, prof in ipairs(member.professions or {}) do
+                if prof.recipes and #prof.recipes > 0 then hasRecipes = true; break end
+            end
+        end
+
         if IsInGuild() then
             GC._inGuild = true
             GC:SendHello()
-            print("|cff00ccffGuildCraft:|r charge — ouvre tes fenetres de metier pour partager tes recettes.")
-        else
-            print("|cff00ccffGuildCraft:|r charge (hors guilde) — ouvre tes fenetres de metier pour scanner tes patrons.")
+            GC:SendVersion()
+            if not hasRecipes then
+                print("|cff00ccffGuildForge:|r " .. (GuildForge.L and GuildForge.L["CORE_OpenWindows"] or "Open your profession windows to share your recipes."))
+            end
         end
     end)
 
@@ -230,7 +240,7 @@ function GC:OnLogin()
         GC._inGuild = true
         GC:After(5, function()
             GC:SendMyData()
-            print("|cff00ccffGuildCraft:|r Donnees broadcaste a la guilde.")
+            print("|cff00ccffGuildForge:|r " .. (GuildForge.L and GuildForge.L["CORE_RecipesUpdated"] or "Recipes synced with the guild."))
         end)
     end
 end
@@ -243,6 +253,6 @@ function GC:OnAddonMessage(prefix, message, channel, sender)
 end
 
 function GC:OnRosterUpdate()
-    if not GuildCraftDB then return end
+    if not GuildForgeDB then return end
     GC:CleanupDepartedMembers()
 end

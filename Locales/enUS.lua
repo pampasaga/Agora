@@ -1,12 +1,12 @@
--- GuildCraft - Locales/enUS.lua
+-- GuildForge - Locales/enUS.lua
 -- Base locale (English). All other locale files override keys as needed.
 
-local L = GuildCraft.L
+local L = GuildForge.L
 
 -- Core
 L["CORE_ScanComplete"]      = "Scan and broadcast complete."
-L["CORE_ErrorPrefix"]       = "GuildCraft error: "
-L["CORE_DebugErrorPrefix"]  = "GuildCraft debug error: "
+L["CORE_ErrorPrefix"]       = "GuildForge error: "
+L["CORE_DebugErrorPrefix"]  = "GuildForge debug error: "
 
 -- UI - Buttons / Tabs
 L["UI_TabByRecipe"]         = "By Recipe"
@@ -37,7 +37,7 @@ L["UI_TooltipComponents"]   = "Components:"
 L["UI_HeaderCoverage"]      = "%d/%d available"
 
 -- Debug panel
-L["DEBUG_Title"]            = "GuildCraft - Debug"
+L["DEBUG_Title"]            = "GuildForge - Debug"
 L["DEBUG_ScanBtn"]          = "Scan my professions"
 L["DEBUG_BroadcastBtn"]     = "Broadcast my data"
 L["DEBUG_HelloBtn"]         = "Request guild data"
@@ -49,7 +49,7 @@ L["DEBUG_MembersInDB"]      = "Members in database: %d"
 L["DEBUG_Timestamp"]        = "Last update: %s"
 
 -- Minimap button tooltip
-L["MINIMAP_Title"]          = "GuildCraft"
+L["MINIMAP_Title"]          = "GuildForge"
 L["MINIMAP_TooltipLeft"]    = " Left click: Open interface"
 L["MINIMAP_TooltipRight"]   = " Right click: Debug"
 L["MINIMAP_TooltipDrag"]    = " Drag: Move button"
@@ -111,3 +111,30 @@ L["UI_MemberOffline"]       = "Offline"
 L["UI_CrafterCount_one"]    = "1 crafter can make this:"
 L["UI_CrafterCount_many"]   = "%d crafters can make this:"
 L["UI_AHHint"]              = "Install Auctionator or Auctioneer to see current reagent prices."
+L["LINK_GitHub_Title"]      = "GitHub"
+L["LINK_GitHub_Desc"]       = "Source code, bug reports and contributions."
+L["LINK_CurseForge_Title"]  = "CurseForge"
+L["LINK_CurseForge_Desc"]   = "Download the latest version and leave a review."
+L["LINK_Kofi_Title"]        = "Ko-fi"
+L["LINK_Kofi_Desc"]         = "If something I made saved you from\nspamming guild chat looking for a crafter,\na coffee goes a long way."
+L["LINK_Credits_Title"]     = "GuildForge"
+L["LINK_Credits_Desc"]      = "Made by Pampasaga on Spineshatter.\nA TBC Anniversary addon to share your guild's crafting knowledge."
+L["LINK_Credits_Msg"]       = "Hey, thanks for using GuildForge!\nBuilt for the <Oui Oui Baguette> guild on Spineshatter.\nSend me gold. |cffff0000<3|r"
+-- Hardcoded strings → localized
+L["UI_OnlineMembers"]       = "Online (%d)"
+L["UI_OfflineMembers"]      = "Offline (%d)"
+L["UI_NoGuild"]             = "Join a guild to share\nyour recipes with your guildmates."
+L["UI_OnboardingMain"]      = "Open each profession window\nto sync your recipes\nwith your guildmates."
+L["UI_OnboardingHint"]      = "Profession icon > right-click > Open"
+L["UI_NoSpecialization"]    = "No specialization data in the guild.\n\nOpen your trade skills to scan."
+L["UI_GuildSpecializations"]= "Guild specializations"
+L["UI_MemberCount_one"]     = "1 member"
+L["UI_MemberCount_many"]    = "%d members"
+L["UI_IncludeVanilla"]      = "Include Vanilla"
+L["CORE_ScanDone"]          = "Scan done."
+L["CORE_OpenWindows"]       = "Open your profession windows to share your recipes."
+L["CORE_NewRecipeLearned"]  = "New recipe learned, synced with the guild."
+L["CORE_RecipesUpdated"]    = "Recipes synced with the guild."
+L["CORE_NewVersion"]        = "A newer version is available: v%s. Download it on CurseForge!"
+L["CORE_UpdateAvailable"]   = "Update available!"
+L["DEBUG_ClearLogs"]        = "Clear logs"

@@ -1,14 +1,14 @@
--- GuildCraft - Locales/ruRU.lua
+-- GuildForge - Locales/ruRU.lua
 -- Russian (ruRU) locale overrides.
 
 if GetLocale() ~= "ruRU" then return end
 
-local L = GuildCraft.L
+local L = GuildForge.L
 
 -- Core
 L["CORE_ScanComplete"]      = "Сканирование и передача завершены."
-L["CORE_ErrorPrefix"]       = "Ошибка GuildCraft: "
-L["CORE_DebugErrorPrefix"]  = "Ошибка отладки GuildCraft: "
+L["CORE_ErrorPrefix"]       = "Ошибка GuildForge: "
+L["CORE_DebugErrorPrefix"]  = "Ошибка отладки GuildForge: "
 
 -- UI - Buttons / Tabs
 L["UI_TabByRecipe"]         = "По рецепту"
@@ -39,7 +39,7 @@ L["UI_TooltipComponents"]   = "Компоненты:"
 L["UI_HeaderCoverage"]      = "%d/%d доступно"
 
 -- Debug panel
-L["DEBUG_Title"]            = "GuildCraft - Debug"
+L["DEBUG_Title"]            = "GuildForge - Debug"
 L["DEBUG_ScanBtn"]          = "Сканировать профессии"
 L["DEBUG_BroadcastBtn"]     = "Отправить данные"
 L["DEBUG_HelloBtn"]         = "Запросить данные гильдии"
@@ -51,7 +51,7 @@ L["DEBUG_MembersInDB"]      = "Участников в базе данных: %d
 L["DEBUG_Timestamp"]        = "Последнее обновление: %s"
 
 -- Minimap button tooltip
-L["MINIMAP_Title"]          = "GuildCraft"
+L["MINIMAP_Title"]          = "GuildForge"
 L["MINIMAP_TooltipLeft"]    = " Левый клик: Открыть интерфейс"
 L["MINIMAP_TooltipRight"]   = " Правый клик: Debug"
 L["MINIMAP_TooltipDrag"]    = " Перетащить: Переместить кнопку"
@@ -113,3 +113,29 @@ L["UI_MemberOffline"]       = "Не в сети"
 L["UI_CrafterCount_one"]    = "1 мастер может создать это:"
 L["UI_CrafterCount_many"]   = "%d мастеров могут создать это:"
 L["UI_AHHint"]              = "Установите Auctionator или Auctioneer для актуальных цен на реагенты."
+L["LINK_GitHub_Title"]      = "GitHub"
+L["LINK_GitHub_Desc"]       = "Исходный код, сообщения об ошибках и вклад в проект."
+L["LINK_CurseForge_Title"]  = "CurseForge"
+L["LINK_CurseForge_Desc"]   = "Скачайте последнюю версию и оставьте отзыв."
+L["LINK_Kofi_Title"]        = "Ko-fi"
+L["LINK_Kofi_Desc"]         = "Если GuildForge избавил вас от спама\nв чате гильдии в поисках мастера,\nбуду рад чашке кофе."
+L["LINK_Credits_Title"]     = "GuildForge"
+L["LINK_Credits_Desc"]      = "Создано Pampasaga на Spineshatter.\nАддон TBC Anniversary для обмена рецептами гильдии."
+L["LINK_Credits_Msg"]       = "Привет, спасибо за GuildForge!\nСоздано для гильдии <Oui Oui Baguette> на Spineshatter.\nПрисылайте золото. |cffff0000<3|r"
+L["UI_OnlineMembers"]       = "Online (%d)"
+L["UI_OfflineMembers"]      = "Offline (%d)"
+L["UI_NoGuild"]             = "Вступите в гильдию, чтобы\nделиться рецептами с согильдейцами."
+L["UI_OnboardingMain"]      = "Откройте каждое окно профессии\nдля синхронизации рецептов\nс согильдейцами."
+L["UI_OnboardingHint"]      = "Иконка профессии > правый клик > Открыть"
+L["UI_NoSpecialization"]    = "Специализации в гильдии не найдены.\n\nОткройте профессии для сканирования."
+L["UI_GuildSpecializations"]= "Специализации гильдии"
+L["UI_MemberCount_one"]     = "1 игрок"
+L["UI_MemberCount_many"]    = "%d игроков"
+L["UI_IncludeVanilla"]      = "Включить Vanilla"
+L["CORE_ScanDone"]          = "Сканирование завершено."
+L["CORE_OpenWindows"]       = "Откройте окна профессий, чтобы поделиться рецептами."
+L["CORE_NewRecipeLearned"]  = "Новый рецепт изучен, синхронизирован с гильдией."
+L["CORE_RecipesUpdated"]    = "Рецепты синхронизированы с гильдией."
+L["CORE_NewVersion"]        = "Доступна новая версия: v%s. Скачайте на CurseForge!"
+L["CORE_UpdateAvailable"]   = "Доступно обновление!"
+L["DEBUG_ClearLogs"]        = "Очистить логи"

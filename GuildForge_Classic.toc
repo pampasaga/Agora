@@ -1,11 +1,12 @@
-## Interface: 40400
-## Title: GuildCraft
+## Interface: 11307
+## Title: GuildForge
 ## Notes: Guild profession and recipe directory. Broadcasts your trade skills to guildmates automatically.
 ## Notes-frFR: Repertoire des metiers et recettes de la guilde. Diffuse automatiquement vos competences.
 ## Version: 0.9.0
-## Author: GuildCraft
-## SavedVariables: GuildCraftDB
-## X-Website: https://github.com/pampa/GuildCraft
+## Author: Pampasaga
+## IconTexture: Interface\AddOns\GuildForge\GuildForge_icon
+## SavedVariables: GuildForgeDB
+## X-Website: https://github.com/pampa/GuildForge
 ## X-License: MIT
 
 Core.lua

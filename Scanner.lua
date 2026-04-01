@@ -1,7 +1,7 @@
--- GuildCraft - Scanner.lua
+-- GuildForge - Scanner.lua
 -- Scan professions (levels) and recipes (open craft window)
 
-local GC = GuildCraft
+local GC = GuildForge
 
 -- Normalize profession names to canonical English.
 -- Handles locale differences AND accents (e.g. Ingenierie / Ingénierie -> Engineering).
@@ -148,7 +148,7 @@ local TAILORING_SPEC_INDICATORS = {
 -- Scans player profession levels via GetSkillLineInfo
 -- Does not require an open craft window
 function GC:ScanProfessionLevels()
-    if not GuildCraftDB then return end
+    if not GuildForgeDB then return end
 
     local _pName = (UnitName and UnitName("player")) or "Unknown"
     local _rName = ""
@@ -158,9 +158,9 @@ function GC:ScanProfessionLevels()
     end
     if _rName == "" then _rName = "Local" end
     local myKey  = _pName .. "-" .. _rName
-    GuildCraft._myKey = myKey  -- cache for other functions
+    GuildForge._myKey = myKey  -- cache for other functions
 
-    local existing = GuildCraftDB.members[myKey] or {}
+    local existing = GuildForgeDB.members[myKey] or {}
 
     -- Preserve already-scanned recipes per profession
     local savedRecipes = {}
@@ -252,7 +252,7 @@ function GC:ScanProfessionLevels()
         end
     end
 
-    GuildCraftDB.members[myKey] = {
+    GuildForgeDB.members[myKey] = {
         name        = UnitName("player"),
         realm       = GetRealmName(),
         class       = select(2, UnitClass("player")),
@@ -264,10 +264,10 @@ end
 -- Scans all recipes from the currently open craft window
 -- Called on TRADE_SKILL_SHOW / TRADE_SKILL_UPDATE
 function GC:ScanTradeSkillRecipes()
-    if not GuildCraftDB then
+    if not GuildForgeDB then
         -- Defensive initialization if OnLogin has not yet run
-        GuildCraftDB = { members = {}, version = GuildCraft.VERSION }
-        GC:Log("[SCAN] GuildCraftDB initialise en urgence")
+        GuildForgeDB = { members = {}, version = GuildForge.VERSION }
+        GC:Log("[SCAN] GuildForgeDB initialise en urgence")
     end
 
     -- Build myKey first (used by the fallbacks below)
@@ -327,10 +327,10 @@ function GC:ScanTradeSkillRecipes()
         local numR = GetNumTradeSkills and GetNumTradeSkills() or 0
         if numR > 0 then
             -- Make sure the member is in the DB before searching their professions
-            if not GuildCraftDB.members[myKey] then
+            if not GuildForgeDB.members[myKey] then
                 pcall(function() GC:ScanProfessionLevels() end)
             end
-            local member0 = GuildCraftDB.members[myKey]
+            local member0 = GuildForgeDB.members[myKey]
             if member0 then
                 for _, p in ipairs(member0.professions or {}) do
                     if p.name:find("nchant") then
@@ -351,7 +351,7 @@ function GC:ScanTradeSkillRecipes()
     GC:Log("[SCAN] myKey = " .. myKey)
 
     -- Make sure the member exists in the DB
-    if not GuildCraftDB.members[myKey] then
+    if not GuildForgeDB.members[myKey] then
         GC:Log("[SCAN] step 2: ScanProfessionLevels")
         local ok2, err2 = pcall(function() GC:ScanProfessionLevels() end)
         if not ok2 then
@@ -359,7 +359,7 @@ function GC:ScanTradeSkillRecipes()
         end
     end
 
-    local member = GuildCraftDB.members[myKey]
+    local member = GuildForgeDB.members[myKey]
     if not member then
         GC:Log("[SCAN] member nil after ScanProfessionLevels, manual creation")
         local _realm2 = ""
@@ -371,7 +371,7 @@ function GC:ScanTradeSkillRecipes()
         member = { name = _pName, realm = _realm2,
                    class = select(2, UnitClass("player")) or "WARRIOR",
                    professions = {}, timestamp = time() }
-        GuildCraftDB.members[myKey] = member
+        GuildForgeDB.members[myKey] = member
     end
 
     GC:Log("[SCAN] step 3: looking up profession " .. skillName)
@@ -456,7 +456,7 @@ end
 
 -- Scan via Craft API (used by Enchanting on Classic/TBC)
 function GC:ScanCraftRecipes()
-    if not GuildCraftDB then return end
+    if not GuildForgeDB then return end
 
     local skillName = GetCraftLine and GetCraftLine()
     if skillName and skillName ~= "UNKNOWN" then
@@ -475,7 +475,7 @@ function GC:ScanCraftRecipes()
             end
             if _rName == "" then _rName = "Local" end
             local _myKey = _pName .. "-" .. _rName
-            local _member = GuildCraftDB.members[_myKey]
+            local _member = GuildForgeDB.members[_myKey]
             if _member then
                 for _, p in ipairs(_member.professions or {}) do
                     if p.name:find("nchant") or p.name:find("nchant") then
@@ -502,10 +502,10 @@ function GC:ScanCraftRecipes()
     if _rName == "" then _rName = "Local" end
     local myKey = _pName .. "-" .. _rName
 
-    if not GuildCraftDB.members[myKey] then
+    if not GuildForgeDB.members[myKey] then
         GC:ScanProfessionLevels()
     end
-    local member = GuildCraftDB.members[myKey]
+    local member = GuildForgeDB.members[myKey]
     if not member then return end
 
     local prof = nil

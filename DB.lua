@@ -1,19 +1,19 @@
--- GuildCraft - DB.lua
--- Read / write member data in GuildCraftDB (SavedVariables)
+-- GuildForge - DB.lua
+-- Read / write member data in GuildForgeDB (SavedVariables)
 
-local GC = GuildCraft
+local GC = GuildForge
 
 -- Save or update a member
 function GC:SaveMember(data)
     if not data or not data.name or not data.realm then return end
     local key = data.name .. "-" .. data.realm
-    GuildCraftDB.members[key] = data
+    GuildForgeDB.members[key] = data
 end
 
 -- Remove a member by key
 function GC:RemoveMember(key)
-    if GuildCraftDB and GuildCraftDB.members then
-        GuildCraftDB.members[key] = nil
+    if GuildForgeDB and GuildForgeDB.members then
+        GuildForgeDB.members[key] = nil
     end
 end
 
@@ -35,15 +35,15 @@ end
 -- Returns only members of the current guild (filtered by WoW roster)
 -- The current player is always included (to see their own recipes while out of guild)
 function GC:GetAllMembers()
-    if not GuildCraftDB then return {} end
+    if not GuildForgeDB then return {} end
 
     local myKey = GC:GetMyKey()
 
     if not IsInGuild() then
         -- Out of guild: only own data
         local result = {}
-        if myKey and GuildCraftDB.members[myKey] then
-            result[myKey] = GuildCraftDB.members[myKey]
+        if myKey and GuildForgeDB.members[myKey] then
+            result[myKey] = GuildForgeDB.members[myKey]
         end
         return result
     end
@@ -51,19 +51,19 @@ function GC:GetAllMembers()
     local roster = GC:GetCurrentGuildSet()
     -- If the roster is not yet loaded, return everything (avoids empty UI at boot)
     if next(roster) == nil then
-        return GuildCraftDB.members or {}
+        return GuildForgeDB.members or {}
     end
 
     local result = {}
-    for key, data in pairs(GuildCraftDB.members or {}) do
+    for key, data in pairs(GuildForgeDB.members or {}) do
         local base = key:match("^([^%-]+)") or key
         if roster[base] then
             result[key] = data
         end
     end
     -- Always include the current player even if the roster is partial
-    if myKey and GuildCraftDB.members[myKey] then
-        result[myKey] = GuildCraftDB.members[myKey]
+    if myKey and GuildForgeDB.members[myKey] then
+        result[myKey] = GuildForgeDB.members[myKey]
     end
     return result
 end
@@ -104,7 +104,7 @@ end
 
 -- Purge members who are no longer in the guild
 function GC:CleanupDepartedMembers()
-    if not IsInGuild() or not GuildCraftDB then return end
+    if not IsInGuild() or not GuildForgeDB then return end
 
     -- Build a set of current members (by base name)
     local current = {}
@@ -131,11 +131,11 @@ function GC:CleanupDepartedMembers()
     end
 
     -- Remove those who are no longer in the guild
-    for key in pairs(GuildCraftDB.members) do
+    for key in pairs(GuildForgeDB.members) do
         local baseName = key:match("^([^%-]+)") or key
         if not current[baseName] then
-            print("|cff00ccffGuildCraft:|r " .. baseName .. " a quitte la guilde, donnees supprimees.")
-            GuildCraftDB.members[key] = nil
+            print("|cff00ccffGuildForge:|r " .. baseName .. " a quitte la guilde, donnees supprimees.")
+            GuildForgeDB.members[key] = nil
         end
     end
 end

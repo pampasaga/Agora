@@ -1,8 +1,8 @@
-# GuildCraft
+# GuildForge
 
 > **Know who can craft what — instantly.**
 
-GuildCraft is a World of Warcraft addon that automatically shares your profession recipes with your guildmates. Open a trade skill window, and GuildCraft silently scans and broadcasts your known recipes to the guild. Any member can then search who can craft what, see reagents, and get a full picture of the guild's crafting coverage.
+GuildForge is a World of Warcraft addon that automatically shares your profession recipes with your guildmates. Open a trade skill window, and GuildForge silently scans and broadcasts your known recipes to the guild. Any member can then search who can craft what, see reagents, and get a full picture of the guild's crafting coverage.
 
 No setup. No slash commands required. It just works.
 
@@ -17,7 +17,7 @@ No setup. No slash commands required. It just works.
 - **Real-time search** : filter by recipe name across all professions at once
 - **Guild specialization summary** : see at a glance which specs (Master Hammersmith, Gnomish Engineer...) exist in your guild
 - **Minimap button** : draggable, left-click to open, right-click for the debug panel
-- **Localization** : English (enUS) and French (frFR) built in
+- **Localization** : English, French, German, Spanish, Portuguese and Russian built in
 - **No external dependencies** : native WoW API only, no libraries required
 
 ---
@@ -27,27 +27,24 @@ No setup. No slash commands required. It just works.
 ### Manual
 
 1. Download the latest release from the [Releases](../../releases) page.
-2. Extract and copy the `GuildCraft` folder into `World of Warcraft/_classic_era_/Interface/AddOns/`.
+2. Extract and copy the `GuildForge` folder into `World of Warcraft/_classic_era_/Interface/AddOns/`.
 3. Reload your UI (`/reload`) or restart the game.
 
 ### CurseForge
 
-Search for **GuildCraft** by **Pampasaga** on CurseForge and install via the CurseForge app.
+Search for **GuildForge** by **Pampasaga** on CurseForge and install via the CurseForge app.
 
 ---
 
 ## Usage
 
-The addon works automatically. When you open a profession window, it scans and broadcasts your recipes to guild members who also have GuildCraft installed.
+The addon works automatically. When you open a profession window, it scans and broadcasts your recipes to guild members who also have GuildForge installed.
 
 | Command | Action |
 |---|---|
-| `/gc` or `/guildcraft` | Open the main interface |
-| `/gc scan` | Rescan professions and broadcast to the guild |
-| `/gc debug` | Open the debug panel |
-| `/gc dev` | Toggle developer mode |
-
-**Shift-click** any recipe in the list to insert its link into the active chat box.
+| `/gf` or `/guildforge` | Open the main interface |
+| `/gf scan` | Rescan professions and broadcast to the guild |
+| `/gf debug` | Open the debug panel |
 
 ---
 
@@ -55,11 +52,8 @@ The addon works automatically. When you open a profession window, it scans and b
 
 | Client | TOC |
 |---|---|
-| Classic Era (1.13) | `GuildCraft_Classic.toc` |
-| The Burning Crusade (2.5) | `GuildCraft_BCC.toc` |
-| Wrath of the Lich King (3.4) | `GuildCraft_Wrath.toc` |
-| Cataclysm (4.4) | `GuildCraft_Cata.toc` |
-| Retail (11.x) | `GuildCraft.toc` |
+| Classic Era (1.13) | `GuildForge_Classic.toc` |
+| The Burning Crusade (2.5) | `GuildForge_BCC.toc` |
 
 ---
 
@@ -73,7 +67,7 @@ Locale files live in `Locales/`. To add a new language, copy `Locales/enUS.lua`,
 
 ## Support
 
-If GuildCraft saves you time, consider supporting development:
+If GuildForge saves you time, consider supporting development:
 
 [![Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/pampasaga)
 

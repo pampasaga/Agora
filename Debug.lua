@@ -1,8 +1,8 @@
--- GuildCraft - Debug.lua
+-- GuildForge - Debug.lua
 -- Debug interface: displays scanned data in real time
 
-local GC = GuildCraft
-local L  = GuildCraft.L
+local GC = GuildForge
+local L  = GuildForge.L
 
 -- ─── Debug frame ──────────────────────────────────────────────────────────
 
@@ -10,7 +10,7 @@ function GC:CreateDebugUI()
     if GC.debugFrame then return end
 
     local template = BackdropTemplateMixin and "BackdropTemplate" or nil
-    local frame = CreateFrame("Frame", "GuildCraftDebugFrame", UIParent, template)
+    local frame = CreateFrame("Frame", "GuildForgeDebugFrame", UIParent, template)
     frame:SetFrameStrata("DIALOG")
     frame:SetSize(620, 720)
     frame:SetPoint("CENTER", UIParent, "CENTER", 200, 0)
@@ -110,7 +110,7 @@ function GC:CreateDebugUI()
     resetBtn:SetPoint("TOPLEFT", frame, "TOPLEFT", 14, -88)
     resetBtn:SetText("|cffff4444" .. (L["DEBUG_ResetDB"] or "Reset DB") .. "|r")
     resetBtn:SetScript("OnClick", function()
-        GuildCraftDB = { members = {}, version = GC.VERSION }
+        GuildForgeDB = { members = {}, version = GC.VERSION }
         GC:Log("|cffff4444[RESET]|r Database cleared.")
         GC:RefreshDebug()
         if GC.mainFrame and GC.mainFrame:IsShown() then
@@ -148,7 +148,7 @@ function GC:CreateDebugUI()
     local clearLogBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
     clearLogBtn:SetSize(90, 18)
     clearLogBtn:SetPoint("TOPLEFT", frame, "TOPLEFT", 120, -352)
-    clearLogBtn:SetText("Clear logs")
+    clearLogBtn:SetText(GuildForge.L and GuildForge.L["DEBUG_ClearLogs"] or "Clear logs")
     clearLogBtn:SetScript("OnClick", function()
         GC._logLines = {}
         if GC.debugFrame then
@@ -196,7 +196,7 @@ function GC:RefreshDebug()
     local lineH = 16
     local playerName = UnitName("player")
     local myKey      = playerName and (playerName .. "-" .. GetRealmName()) or nil
-    local member     = myKey and GuildCraftDB and GuildCraftDB.members and GuildCraftDB.members[myKey]
+    local member     = myKey and GuildForgeDB and GuildForgeDB.members and GuildForgeDB.members[myKey]
 
     if not member then
         addLine("|cffff4444" .. L["DEBUG_NoData"] .. "|r", y)
@@ -246,7 +246,7 @@ function GC:RefreshDebug()
     end
 
     local memberCount = 0
-    for _ in pairs(GuildCraftDB.members) do memberCount = memberCount + 1 end
+    for _ in pairs(GuildForgeDB.members) do memberCount = memberCount + 1 end
     y = y - lineH * 0.5
     addLine("|cffffff00" .. string.format(L["DEBUG_MembersInDB"], memberCount) .. "|r", y)
 
@@ -308,7 +308,7 @@ end
 local _origScanLevels = GC.ScanProfessionLevels
 function GC:ScanProfessionLevels()
     _origScanLevels(self)
-    local member = GuildCraftDB and GuildCraftDB.members and GuildCraftDB.members[debugGetMyKey()]
+    local member = GuildForgeDB and GuildForgeDB.members and GuildForgeDB.members[debugGetMyKey()]
     if member then
         GC:Log("ScanProfessionLevels - " .. #(member.professions or {}) .. " metier(s) detecte(s)")
     end
@@ -318,7 +318,7 @@ end
 local _origScanRecipes = GC.ScanTradeSkillRecipes
 function GC:ScanTradeSkillRecipes()
     _origScanRecipes(self)
-    local member = GuildCraftDB and GuildCraftDB.members and GuildCraftDB.members[debugGetMyKey()]
+    local member = GuildForgeDB and GuildForgeDB.members and GuildForgeDB.members[debugGetMyKey()]
     if member then
         for _, prof in ipairs(member.professions or {}) do
             GC:Log("Recettes scannees : " .. prof.name .. " (" .. #prof.recipes .. " recettes)")

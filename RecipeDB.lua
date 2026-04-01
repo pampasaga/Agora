@@ -1,10 +1,10 @@
--- GuildCraft - RecipeDB_new.lua
+-- GuildForge - RecipeDB_new.lua
 -- Base de donnees statique : IDs uniquement
 -- Noms, icones, descriptions fournis par GetItemInfo/GetSpellInfo/GetSpellDescription au runtime
 -- Source: CraftLib (github.com/kaldown/CraftLib) - MIT License
 -- Generee le 2026-03-31
 
-local GC = GuildCraft
+local GC = GuildForge
 
 GC.EXP_CLASSIC = 1
 GC.EXP_TBC     = 2
