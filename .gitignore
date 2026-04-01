@@ -3,8 +3,9 @@
 .AppleDouble
 .LSOverride
 
-# Claude instructions (local only)
+# Claude instructions and session data (local only)
 CLAUDE.md
+.claude/
 
 # Deploy script (local paths, not useful for others)
 deploy.sh
