@@ -1,18 +1,17 @@
 # Changelog
 
-## [Unreleased]
+## [0.9.0] - 2026-04-01
 
-## [0.9.0] - 2025-xx-xx
+First public release.
 
-First public pre-release.
-
-- Automatic recipe scan and guild broadcast on trade skill window open
-- "By Recipe" view with guild coverage and reagent tooltips
-- "By Member" view browsing each member's professions
-- Expansion filter (current + previous expansion toggle)
-- Real-time recipe search
-- Draggable minimap button
-- Localization system with enUS (base) and frFR support
-- Debug panel with simulation tools (fake members)
-- `/gc dev` command to toggle developer mode
-- Compatible with Classic, TBC, WotLK, Cata, and Retail TOC versions
+- Automatic recipe scan and guild broadcast when opening a trade skill window
+- By Recipe view: find who in your guild can craft any item, with reagent list and crafter count
+- By Member view: browse each guildmate's professions and known recipes
+- Guild specialization summary (Master Weaponsmith, Gnomish Engineer, Potion Master...)
+- Expansion filter: toggle between current and previous expansion recipes
+- Real-time recipe search across all professions
+- Whisper button to contact a crafter directly
+- Draggable minimap button (left-click to open, right-click for debug panel)
+- Version check: notifies you in chat and in the UI when a newer version is available
+- Localization: English, French, German, Spanish, Portuguese, Russian
+- Compatible with Classic Era and The Burning Crusade (TBC Anniversary)
