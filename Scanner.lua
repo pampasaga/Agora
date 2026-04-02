@@ -1,4 +1,4 @@
--- GuildForge - Scanner.lua
+-- Agora - Scanner.lua
 -- Scan professions (levels) and recipes (open craft window)
 
 local GC = Agora

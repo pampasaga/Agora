@@ -1,4 +1,4 @@
--- GuildForge - Locales/ruRU.lua
+-- Agora - Locales/ruRU.lua
 -- Russian (ruRU) locale overrides.
 
 if GetLocale() ~= "ruRU" then return end

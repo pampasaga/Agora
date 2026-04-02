@@ -1,4 +1,4 @@
--- GuildForge - Debug.lua
+-- Agora - Debug.lua
 -- Debug interface: displays scanned data in real time
 
 local GC = Agora

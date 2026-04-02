@@ -1,4 +1,4 @@
--- GuildForge - UI.lua
+-- Agora - UI.lua
 -- Main interface: Recipes view (split panel)
 -- Window 820x580, left panel = list, right panel = detail
 
@@ -829,7 +829,7 @@ local function CreateDetailPanel(parent, x, y, w, h)
     -- Empty state icon (shown alongside hint)
     local emptyIcon = panel:CreateTexture(nil, "ARTWORK")
     emptyIcon:SetSize(52, 52)
-    emptyIcon:SetTexture("Interface\\AddOns\\GuildForge\\GuildForge_icon")
+    emptyIcon:SetTexture("Interface\\AddOns\\Agora\\Agora_icon")
     emptyIcon:SetPoint("CENTER", panel, "CENTER", 0, 30)
     emptyIcon:SetAlpha(0.25)
     emptyIcon:Hide()
@@ -1621,7 +1621,7 @@ function GC:CreateUI()
     -- Title icon + text
     local titleIcon = frame:CreateTexture(nil, "OVERLAY")
     titleIcon:SetSize(20, 20)
-    titleIcon:SetTexture("Interface\\AddOns\\GuildForge\\GuildForge_icon")
+    titleIcon:SetTexture("Interface\\AddOns\\Agora\\Agora_icon")
     titleIcon:SetPoint("TOP", frame, "TOP", -50, -(8 + TITLE_H / 2 - 10))
 
     local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")

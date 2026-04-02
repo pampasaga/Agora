@@ -1,4 +1,4 @@
--- GuildForge - Locales/enUS.lua
+-- Agora - Locales/enUS.lua
 -- Base locale (English). All other locale files override keys as needed.
 
 local L = Agora.L

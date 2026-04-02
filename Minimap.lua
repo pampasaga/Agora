@@ -1,4 +1,4 @@
--- GuildForge - Minimap.lua
+-- Agora - Minimap.lua
 -- Structure identique a LibDBIcon-1.0 (copie exacte de createButton)
 
 local GC = Agora
@@ -24,7 +24,7 @@ background:SetPoint("TOPLEFT", 7, -5)
 
 local icon = button:CreateTexture(nil, "ARTWORK")
 icon:SetSize(17, 17)
-icon:SetTexture("Interface\\AddOns\\GuildForge\\GuildForge_icon")
+icon:SetTexture("Interface\\AddOns\\Agora\\Agora_icon")
 icon:SetTexCoord(0, 1, 0, 1)
 icon:SetPoint("TOPLEFT", 7, -6)
 button.icon = icon

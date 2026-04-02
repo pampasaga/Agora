@@ -1,4 +1,4 @@
--- GuildForge - DB.lua
+-- Agora - DB.lua
 -- Read / write member data in AgoraDB (SavedVariables)
 
 local GC = Agora

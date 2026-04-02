@@ -1,4 +1,4 @@
--- GuildForge - Locales/frFR.lua
+-- Agora - Locales/frFR.lua
 -- French (frFR) locale overrides.
 
 if GetLocale() ~= "frFR" then return end

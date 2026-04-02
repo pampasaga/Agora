@@ -1,4 +1,4 @@
--- GuildForge - RecipeDB_new.lua
+-- Agora - RecipeDB_new.lua
 -- Base de donnees statique : IDs uniquement
 -- Noms, icones, descriptions fournis par GetItemInfo/GetSpellInfo/GetSpellDescription au runtime
 -- Source: CraftLib (github.com/kaldown/CraftLib) - MIT License

@@ -1,4 +1,4 @@
--- GuildForge - Locales/ptBR.lua
+-- Agora - Locales/ptBR.lua
 -- Portuguese Brazil (ptBR) locale overrides.
 
 if GetLocale() ~= "ptBR" then return end

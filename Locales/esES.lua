@@ -1,4 +1,4 @@
--- GuildForge - Locales/esES.lua
+-- Agora - Locales/esES.lua
 -- Spanish (esES / esMX) locale overrides.
 
 local loc = GetLocale()

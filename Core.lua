@@ -1,10 +1,8 @@
--- GuildForge - Core.lua
+-- Agora - Core.lua
 -- Namespace, initialization, event management
 
-GuildForge = GuildForge or {}  -- garde compat pendant transition
-Agora = GuildForge              -- alias principal
--- NOTE: GuildForge alias must remain until all Locale files are updated from
--- "local L = GuildForge.L" to "local L = Agora.L". Do not remove.
+Agora = Agora or {}
+
 local GC = Agora
 
 -- Slash commands first, before any code that could crash

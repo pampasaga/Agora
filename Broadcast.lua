@@ -1,4 +1,4 @@
--- GuildForge - Broadcast.lua
+-- Agora - Broadcast.lua
 -- Serialization, chunking, sending and receiving guild data
 
 local GC = Agora

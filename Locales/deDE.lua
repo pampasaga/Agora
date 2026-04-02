@@ -1,4 +1,4 @@
--- GuildForge - Locales/deDE.lua
+-- Agora - Locales/deDE.lua
 -- German (deDE) locale overrides.
 
 if GetLocale() ~= "deDE" then return end
