@@ -2033,6 +2033,32 @@ function GC:CreateUI()
     --     L["LINK_Kofi_Title"], L["LINK_Kofi_Desc"], "ko-fi.com/pampasaga")
     -- footerKF:SetPoint("LEFT", footerCF, "RIGHT", 8, 0)
 
+    -- Propose my services button
+    local proposeBtn = CreateFrame("Button", nil, frame)
+    proposeBtn:SetSize(160, 22)
+    proposeBtn:SetPoint("LEFT", footerCF, "RIGHT", 10, 0)
+
+    local proposeBg = proposeBtn:CreateTexture(nil, "BACKGROUND")
+    proposeBg:SetAllPoints()
+    proposeBg:SetTexture("Interface\\Tooltips\\UI-Tooltip-Background")
+    proposeBg:SetVertexColor(0.15, 0.35, 0.15, 0.9)
+
+    local proposeLbl = proposeBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    proposeLbl:SetAllPoints()
+    proposeLbl:SetJustifyH("CENTER")
+    proposeLbl:SetText("|cff55dd55" .. (L["UI_ProposeServices"] or "Propose my services") .. "|r")
+
+    proposeBtn:SetScript("OnClick", function()
+        GC:ToggleProposePanel()
+    end)
+    proposeBtn:SetScript("OnEnter", function()
+        proposeBg:SetVertexColor(0.2, 0.45, 0.2, 1)
+    end)
+    proposeBtn:SetScript("OnLeave", function()
+        proposeBg:SetVertexColor(0.15, 0.35, 0.15, 0.9)
+    end)
+    frame.proposeBtn = proposeBtn
+
     -- Right: Pampasaga branding (clickable credits)
     local footerBrand = CreateFrame("Button", nil, frame)
     footerBrand:SetSize(160, 28)
@@ -2073,6 +2099,216 @@ function GC:CreateUI()
     GC.mainFrame = frame
     GC:BuildTabs()
     GC:RefreshUI()
+end
+
+-- ============================================================================
+-- Propose panel
+-- ============================================================================
+
+function GC:CreateProposePanel()
+    if GC.proposePanel then return end
+
+    local template = BackdropTemplateMixin and "BackdropTemplate" or nil
+    local panel = CreateFrame("Frame", "AgoraProposePanel", UIParent, template)
+    panel:SetSize(380, 420)
+    panel:SetPoint("BOTTOMLEFT", GC.mainFrame, "BOTTOMRIGHT", 6, 0)
+    panel:SetFrameStrata("HIGH")
+    panel:SetMovable(true)
+    panel:EnableMouse(true)
+    panel:RegisterForDrag("LeftButton")
+    panel:SetScript("OnDragStart", panel.StartMoving)
+    panel:SetScript("OnDragStop",  panel.StopMovingOrSizing)
+    panel:Hide()
+
+    if panel.SetBackdrop then
+        panel:SetBackdrop({
+            bgFile   = "Interface\\DialogFrame\\UI-DialogBox-Background",
+            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Gold-Border",
+            tile = true, tileSize = 32, edgeSize = 32,
+            insets = { left = 11, right = 12, top = 12, bottom = 11 },
+        })
+        panel:SetBackdropColor(0.06, 0.04, 0.01, 1.0)
+        panel:SetBackdropBorderColor(0.6, 0.48, 0.18, 0.85)
+    end
+
+    local title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    title:SetPoint("TOP", panel, "TOP", 0, -14)
+    title:SetText("|cffffd700" .. (L["UI_ProposeTitle"] or "Propose my services") .. "|r")
+
+    local closeBtn = CreateFrame("Button", nil, panel, "UIPanelCloseButton")
+    closeBtn:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -4, -4)
+    closeBtn:SetScript("OnClick", function() panel:Hide() end)
+
+    local optInChk = CreateFrame("CheckButton", nil, panel, "UICheckButtonTemplate")
+    optInChk:SetSize(22, 22)
+    optInChk:SetPoint("TOPLEFT", panel, "TOPLEFT", 20, -44)
+    local optInLbl = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    optInLbl:SetText(L["UI_BroadcastServer"] or "Broadcast to server")
+    optInLbl:SetPoint("LEFT", optInChk, "RIGHT", 4, 0)
+    optInChk:SetChecked(GC:GetServerOptIn())
+    optInChk:SetScript("OnClick", function(self)
+        local val = self:GetChecked()
+        GC:SetServerOptIn(val)
+        if val then
+            GC:SendMyData()
+        else
+            GC:SendRemove()
+        end
+    end)
+    panel.optInChk = optInChk
+
+    local priceLbl = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    priceLbl:SetPoint("TOPLEFT", optInChk, "BOTTOMLEFT", 0, -14)
+    priceLbl:SetText(L["UI_DefaultPrice"] or "Default price:")
+
+    local priceOptions = { "", "tips", "custom" }
+    local priceLabels  = { L["UI_Free"] or "Free", L["UI_Tips"] or "Tips", L["UI_Fixed"] or "Fixed" }
+    local priceRadios  = {}
+    local priceEditBox = nil
+
+    local px = 20
+    for i, opt in ipairs(priceOptions) do
+        local rb = CreateFrame("CheckButton", nil, panel, "UICheckButtonTemplate")
+        rb:SetSize(18, 18)
+        rb:SetPoint("TOPLEFT", panel, "TOPLEFT", px, -90)
+        local rl = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        rl:SetText(priceLabels[i])
+        rl:SetPoint("LEFT", rb, "RIGHT", 2, 0)
+        local captOpt = opt
+        local captIdx = i
+        rb:SetScript("OnClick", function()
+            GC:SetPriceDefault(captOpt == "custom" and "" or captOpt)
+            for _, r in ipairs(priceRadios) do r:SetChecked(false) end
+            rb:SetChecked(true)
+            if priceEditBox then
+                priceEditBox:SetShown(captOpt == "custom")
+            end
+        end)
+        table.insert(priceRadios, rb)
+        px = px + 60
+    end
+
+    local editBox = CreateFrame("EditBox", nil, panel)
+    editBox:SetSize(80, 20)
+    editBox:SetPoint("LEFT", priceRadios[3], "RIGHT", 22, 0)
+    editBox:SetFontObject("GameFontNormalSmall")
+    editBox:SetAutoFocus(false)
+    editBox:SetNumeric(false)
+    editBox:SetMaxLetters(10)
+    local editBg = editBox:CreateTexture(nil, "BACKGROUND")
+    editBg:SetAllPoints()
+    editBg:SetColorTexture(0, 0, 0, 0.5)
+    editBox:SetScript("OnEnterPressed", function(self)
+        GC:SetPriceDefault(self:GetText())
+        self:ClearFocus()
+    end)
+    editBox:Hide()
+    priceEditBox = editBox
+    panel.priceEditBox = editBox
+
+    local current = GC:GetPriceDefault()
+    if current == "" then
+        priceRadios[1]:SetChecked(true)
+    elseif current == "tips" then
+        priceRadios[2]:SetChecked(true)
+    else
+        priceRadios[3]:SetChecked(true)
+        editBox:SetText(current)
+        editBox:Show()
+    end
+
+    local scrollY = -140
+    local scroll = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
+    scroll:SetPoint("TOPLEFT",     panel, "TOPLEFT",  14, scrollY)
+    scroll:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -28, 14)
+    local scrollChild = CreateFrame("Frame", nil, scroll)
+    scrollChild:SetWidth(340)
+    scrollChild:SetHeight(1)
+    scroll:SetScrollChild(scrollChild)
+    panel.proposeScroll      = scroll
+    panel.proposeScrollChild = scrollChild
+
+    GC.proposePanel = panel
+end
+
+function GC:ToggleProposePanel()
+    if not GC.proposePanel then GC:CreateProposePanel() end
+    if GC.proposePanel:IsShown() then
+        GC.proposePanel:Hide()
+    else
+        GC:RefreshProposePanel()
+        GC.proposePanel:Show()
+    end
+end
+
+function GC:RefreshProposePanel()
+    if not GC.proposePanel then return end
+    local child = GC.proposePanel.proposeScrollChild
+    for _, w in ipairs(child._rows or {}) do w:Hide() end
+    child._rows = {}
+
+    local myKey  = GC:GetMyKey()
+    local myData = AgoraDB and AgoraDB.members and AgoraDB.members[myKey]
+    if not myData then return end
+
+    local y = 0
+    for _, prof in ipairs(myData.professions or {}) do
+        local hdr = child:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        hdr:SetPoint("TOPLEFT", child, "TOPLEFT", 0, -y)
+        hdr:SetText("|cffffd700" .. (prof.name or "") .. "|r")
+        table.insert(child._rows, hdr)
+        y = y + 20
+
+        for _, recipe in ipairs(prof.recipes or {}) do
+            local row = CreateFrame("Frame", nil, child)
+            row:SetSize(340, 22)
+            row:SetPoint("TOPLEFT", child, "TOPLEFT", 0, -y)
+            table.insert(child._rows, row)
+
+            local rLbl = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            rLbl:SetPoint("LEFT", row, "LEFT", 0, 0)
+            rLbl:SetText(recipe.name or "")
+
+            local matsChk = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
+            matsChk:SetSize(18, 18)
+            matsChk:SetPoint("RIGHT", row, "RIGHT", -60, 0)
+            local matsLbl = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            matsLbl:SetText(L["UI_ProvidesCompos"] or "+Compos")
+            matsLbl:SetPoint("RIGHT", matsChk, "LEFT", -2, 0)
+
+            local myPrice = GC:GetMyPrice(prof.name, recipe.name)
+            matsChk:SetChecked(myPrice.provides_mats)
+
+            local capProf   = prof.name
+            local capRecipe = recipe.name
+            matsChk:SetScript("OnClick", function(self)
+                local val = self:GetChecked()
+                if val then
+                    local reagents = GC:GetRecipeReagents(capProf, capRecipe)
+                    if reagents then
+                        local result = GC:ScanBags(reagents)
+                        if not result.ok then
+                            self:SetChecked(false)
+                            local msg = L["UI_MissingMats"] or "Missing materials:"
+                            for _, m in ipairs(result.missing) do
+                                msg = msg .. "  " .. m.name .. " : " .. m.have .. "/" .. m.need
+                            end
+                            DEFAULT_CHAT_FRAME:AddMessage("|cffff9900Agora:|r " .. msg)
+                            return
+                        end
+                    end
+                end
+                local cur = GC:GetMyPrice(capProf, capRecipe)
+                GC:SetMyPrice(capProf, capRecipe, cur.price, val)
+                GC:SendMyData()
+            end)
+
+            y = y + 22
+        end
+        y = y + 6
+    end
+
+    child:SetHeight(math.max(y + 10, 1))
 end
 
 -- ============================================================================
