@@ -59,7 +59,7 @@ function GC:GetMyPrice(profName, recipeName)
 end
 
 function GC:SetMyPrice(profName, recipeName, price, provides_mats)
-    if not AgoraDB then return end
+    if not AgoraDB or not AgoraDB.my_prices then return end
     if not AgoraDB.my_prices[profName] then
         AgoraDB.my_prices[profName] = {}
     end
