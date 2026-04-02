@@ -8,8 +8,8 @@ local L = GuildForge.L
 
 -- Core
 L["CORE_ScanComplete"]      = "Escaneo y difusión completados."
-L["CORE_ErrorPrefix"]       = "GuildForge error: "
-L["CORE_DebugErrorPrefix"]  = "GuildForge debug error: "
+L["CORE_ErrorPrefix"]       = "Agora error: "
+L["CORE_DebugErrorPrefix"]  = "Agora debug error: "
 
 -- UI - Buttons / Tabs
 L["UI_TabByRecipe"]         = "Por Receta"
@@ -40,7 +40,7 @@ L["UI_TooltipComponents"]   = "Componentes:"
 L["UI_HeaderCoverage"]      = "%d/%d disponibles"
 
 -- Debug panel
-L["DEBUG_Title"]            = "GuildForge - Debug"
+L["DEBUG_Title"]            = "Agora - Debug"
 L["DEBUG_ScanBtn"]          = "Escanear mis profesiones"
 L["DEBUG_BroadcastBtn"]     = "Enviar mis datos"
 L["DEBUG_HelloBtn"]         = "Solicitar datos del gremio"
@@ -52,7 +52,7 @@ L["DEBUG_MembersInDB"]      = "Miembros en la base de datos: %d"
 L["DEBUG_Timestamp"]        = "Última actualización: %s"
 
 -- Minimap button tooltip
-L["MINIMAP_Title"]          = "GuildForge"
+L["MINIMAP_Title"]          = "Agora"
 L["MINIMAP_TooltipLeft"]    = " Clic izq: Abrir interfaz"
 L["MINIMAP_TooltipRight"]   = " Clic der: Debug"
 L["MINIMAP_TooltipDrag"]    = " Arrastrar: Mover botón"
@@ -119,10 +119,10 @@ L["LINK_GitHub_Desc"]       = "Código fuente, informes de errores y contribucio
 L["LINK_CurseForge_Title"]  = "CurseForge"
 L["LINK_CurseForge_Desc"]   = "Descarga la última versión y deja una reseña."
 L["LINK_Kofi_Title"]        = "Ko-fi"
-L["LINK_Kofi_Desc"]         = "Si GuildForge te ahorro tener que spamear\nel chat de hermandad buscando un artesano,\nun cafe es bienvenido."
-L["LINK_Credits_Title"]     = "GuildForge"
+L["LINK_Kofi_Desc"]         = "Si Agora te ahorro tener que spamear\nel chat de hermandad buscando un artesano,\nun cafe es bienvenido."
+L["LINK_Credits_Title"]     = "Agora"
 L["LINK_Credits_Desc"]      = "Creado por Pampasaga en Spineshatter.\nAddon de TBC Anniversary para compartir las recetas de tu hermandad."
-L["LINK_Credits_Msg"]       = "Hey, gracias por usar GuildForge!\nCreado para la hermandad <Oui Oui Baguette> en Spineshatter.\nMándame oro. |cffff0000<3|r"
+L["LINK_Credits_Msg"]       = "Hey, gracias por usar Agora!\nCreado para la hermandad <Oui Oui Baguette> en Spineshatter.\nMándame oro. |cffff0000<3|r"
 L["UI_OnlineMembers"]       = "En linea (%d)"
 L["UI_OfflineMembers"]      = "Desconectado (%d)"
 L["UI_NoGuild"]             = "Unete a una hermandad para\ncompartir tus recetas."

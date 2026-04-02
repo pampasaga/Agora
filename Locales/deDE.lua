@@ -7,8 +7,8 @@ local L = GuildForge.L
 
 -- Core
 L["CORE_ScanComplete"]      = "Scan und Übertragung abgeschlossen."
-L["CORE_ErrorPrefix"]       = "GuildForge Fehler: "
-L["CORE_DebugErrorPrefix"]  = "GuildForge Debug-Fehler: "
+L["CORE_ErrorPrefix"]       = "Agora Fehler: "
+L["CORE_DebugErrorPrefix"]  = "Agora Debug-Fehler: "
 
 -- UI - Buttons / Tabs
 L["UI_TabByRecipe"]         = "Nach Rezept"
@@ -39,7 +39,7 @@ L["UI_TooltipComponents"]   = "Komponenten:"
 L["UI_HeaderCoverage"]      = "%d/%d verfügbar"
 
 -- Debug panel
-L["DEBUG_Title"]            = "GuildForge - Debug"
+L["DEBUG_Title"]            = "Agora - Debug"
 L["DEBUG_ScanBtn"]          = "Berufe scannen"
 L["DEBUG_BroadcastBtn"]     = "Daten senden"
 L["DEBUG_HelloBtn"]         = "Gildendaten anfragen"
@@ -51,7 +51,7 @@ L["DEBUG_MembersInDB"]      = "Mitglieder in der Datenbank: %d"
 L["DEBUG_Timestamp"]        = "Letztes Update: %s"
 
 -- Minimap button tooltip
-L["MINIMAP_Title"]          = "GuildForge"
+L["MINIMAP_Title"]          = "Agora"
 L["MINIMAP_TooltipLeft"]    = " Linksklick: Interface öffnen"
 L["MINIMAP_TooltipRight"]   = " Rechtsklick: Debug"
 L["MINIMAP_TooltipDrag"]    = " Ziehen: Schaltfläche verschieben"
@@ -118,10 +118,10 @@ L["LINK_GitHub_Desc"]       = "Quellcode, Fehlermeldungen und Beiträge."
 L["LINK_CurseForge_Title"]  = "CurseForge"
 L["LINK_CurseForge_Desc"]   = "Lade die neueste Version herunter und hinterlasse eine Bewertung."
 L["LINK_Kofi_Title"]        = "Ko-fi"
-L["LINK_Kofi_Desc"]         = "Wenn GuildForge dir das Spammen im\nGildenchat nach einem Handwerker erspart hat,\nfreue ich mich ueber einen Kaffee."
-L["LINK_Credits_Title"]     = "GuildForge"
+L["LINK_Kofi_Desc"]         = "Wenn Agora dir das Spammen im\nGildenchat nach einem Handwerker erspart hat,\nfreue ich mich ueber einen Kaffee."
+L["LINK_Credits_Title"]     = "Agora"
 L["LINK_Credits_Desc"]      = "Erstellt von Pampasaga auf Spineshatter.\nEin TBC-Anniversary-Addon zum Teilen der Handwerksrezepte deiner Gilde."
-L["LINK_Credits_Msg"]       = "Hey, danke für GuildForge!\nErstellt für die Gilde <Oui Oui Baguette> auf Spineshatter.\nSchickt mir Gold. |cffff0000<3|r"
+L["LINK_Credits_Msg"]       = "Hey, danke für Agora!\nErstellt für die Gilde <Oui Oui Baguette> auf Spineshatter.\nSchickt mir Gold. |cffff0000<3|r"
 L["UI_OnlineMembers"]       = "Online (%d)"
 L["UI_OfflineMembers"]      = "Offline (%d)"
 L["UI_NoGuild"]             = "Tritt einer Gilde bei, um\ndeine Rezepte zu teilen."

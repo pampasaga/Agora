@@ -7,8 +7,8 @@ local L = GuildForge.L
 
 -- Core
 L["CORE_ScanComplete"]      = "Сканирование и передача завершены."
-L["CORE_ErrorPrefix"]       = "Ошибка GuildForge: "
-L["CORE_DebugErrorPrefix"]  = "Ошибка отладки GuildForge: "
+L["CORE_ErrorPrefix"]       = "Ошибка Agora: "
+L["CORE_DebugErrorPrefix"]  = "Ошибка отладки Agora: "
 
 -- UI - Buttons / Tabs
 L["UI_TabByRecipe"]         = "По рецепту"
@@ -39,7 +39,7 @@ L["UI_TooltipComponents"]   = "Компоненты:"
 L["UI_HeaderCoverage"]      = "%d/%d доступно"
 
 -- Debug panel
-L["DEBUG_Title"]            = "GuildForge - Debug"
+L["DEBUG_Title"]            = "Agora - Debug"
 L["DEBUG_ScanBtn"]          = "Сканировать профессии"
 L["DEBUG_BroadcastBtn"]     = "Отправить данные"
 L["DEBUG_HelloBtn"]         = "Запросить данные гильдии"
@@ -51,7 +51,7 @@ L["DEBUG_MembersInDB"]      = "Участников в базе данных: %d
 L["DEBUG_Timestamp"]        = "Последнее обновление: %s"
 
 -- Minimap button tooltip
-L["MINIMAP_Title"]          = "GuildForge"
+L["MINIMAP_Title"]          = "Agora"
 L["MINIMAP_TooltipLeft"]    = " Левый клик: Открыть интерфейс"
 L["MINIMAP_TooltipRight"]   = " Правый клик: Debug"
 L["MINIMAP_TooltipDrag"]    = " Перетащить: Переместить кнопку"
@@ -118,10 +118,10 @@ L["LINK_GitHub_Desc"]       = "Исходный код, сообщения об 
 L["LINK_CurseForge_Title"]  = "CurseForge"
 L["LINK_CurseForge_Desc"]   = "Скачайте последнюю версию и оставьте отзыв."
 L["LINK_Kofi_Title"]        = "Ko-fi"
-L["LINK_Kofi_Desc"]         = "Если GuildForge избавил вас от спама\nв чате гильдии в поисках мастера,\nбуду рад чашке кофе."
-L["LINK_Credits_Title"]     = "GuildForge"
+L["LINK_Kofi_Desc"]         = "Если Agora избавил вас от спама\nв чате гильдии в поисках мастера,\nбуду рад чашке кофе."
+L["LINK_Credits_Title"]     = "Agora"
 L["LINK_Credits_Desc"]      = "Создано Pampasaga на Spineshatter.\nАддон TBC Anniversary для обмена рецептами гильдии."
-L["LINK_Credits_Msg"]       = "Привет, спасибо за GuildForge!\nСоздано для гильдии <Oui Oui Baguette> на Spineshatter.\nПрисылайте золото. |cffff0000<3|r"
+L["LINK_Credits_Msg"]       = "Привет, спасибо за Agora!\nСоздано для гильдии <Oui Oui Baguette> на Spineshatter.\nПрисылайте золото. |cffff0000<3|r"
 L["UI_OnlineMembers"]       = "Online (%d)"
 L["UI_OfflineMembers"]      = "Offline (%d)"
 L["UI_NoGuild"]             = "Вступите в гильдию, чтобы\nделиться рецептами с согильдейцами."
