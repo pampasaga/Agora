@@ -1,7 +1,7 @@
 -- GuildForge - Locales/enUS.lua
 -- Base locale (English). All other locale files override keys as needed.
 
-local L = GuildForge.L
+local L = Agora.L
 
 -- Core
 L["CORE_ScanComplete"]      = "Scan and broadcast complete."

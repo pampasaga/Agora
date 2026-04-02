@@ -3,7 +3,7 @@
 
 if GetLocale() ~= "ruRU" then return end
 
-local L = GuildForge.L
+local L = Agora.L
 
 -- Core
 L["CORE_ScanComplete"]      = "Сканирование и передача завершены."

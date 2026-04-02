@@ -4,7 +4,7 @@
 local loc = GetLocale()
 if loc ~= "esES" and loc ~= "esMX" then return end
 
-local L = GuildForge.L
+local L = Agora.L
 
 -- Core
 L["CORE_ScanComplete"]      = "Escaneo y difusión completados."

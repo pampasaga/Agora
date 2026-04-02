@@ -4,7 +4,7 @@
 -- Source: CraftLib (github.com/kaldown/CraftLib) - MIT License
 -- Generee le 2026-03-31
 
-local GC = GuildForge
+local GC = Agora
 
 GC.EXP_CLASSIC = 1
 GC.EXP_TBC     = 2

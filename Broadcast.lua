@@ -12,6 +12,13 @@ local CHUNK_SEP  = "\002"   -- chunk header separator (ASCII 2)
 
 GC.SERVER_CHANNEL = "Agora"
 
+-- Returns the numeric channel index required by SendAddonMessage for CHANNEL distribution.
+-- Returns nil if the channel is not currently joined.
+local function ServerChanIdx()
+    local idx = GetChannelName(GC.SERVER_CHANNEL)
+    return (idx and idx > 0) and idx or nil
+end
+
 -- Incoming chunks being reassembled: { ["senderKey:CHANNEL"] = { total, count, chunks={} } }
 GC.incoming = {}
 
@@ -168,7 +175,10 @@ function GC:SendChunked(senderKey, payload, channel)
         -- 0.05s delay between each chunk to avoid flooding
         GC:After((idx - 1) * 0.05, function()
             if channel == "CHANNEL" then
-                SendAddonMsg(GC.PREFIX, msg, "CHANNEL", GC.SERVER_CHANNEL)
+                local chanIdx = ServerChanIdx()
+                if chanIdx then
+                    SendAddonMsg(GC.PREFIX, msg, "CHANNEL", chanIdx)
+                end
             else
                 SendAddonMsg(GC.PREFIX, msg, "GUILD")
             end
@@ -214,7 +224,8 @@ function GC:SendHello()
         SendAddonMsg(GC.PREFIX, msg, "GUILD")
     end
     if GC:GetServerOptIn() then
-        SendAddonMsg(GC.PREFIX, msg, "CHANNEL", GC.SERVER_CHANNEL)
+        local chanIdx = ServerChanIdx()
+        if chanIdx then SendAddonMsg(GC.PREFIX, msg, "CHANNEL", chanIdx) end
     end
 end
 
@@ -226,7 +237,8 @@ function GC:SendHeartbeat()
         SendAddonMsg(GC.PREFIX, msg, "GUILD")
     end
     if GC:GetServerOptIn() then
-        SendAddonMsg(GC.PREFIX, msg, "CHANNEL", GC.SERVER_CHANNEL)
+        local chanIdx = ServerChanIdx()
+        if chanIdx then SendAddonMsg(GC.PREFIX, msg, "CHANNEL", chanIdx) end
     end
 end
 
@@ -238,7 +250,8 @@ function GC:SendRemove()
         SendAddonMsg(GC.PREFIX, msg, "GUILD")
     end
     if GC:GetServerOptIn() then
-        SendAddonMsg(GC.PREFIX, msg, "CHANNEL", GC.SERVER_CHANNEL)
+        local chanIdx = ServerChanIdx()
+        if chanIdx then SendAddonMsg(GC.PREFIX, msg, "CHANNEL", chanIdx) end
     end
 end
 

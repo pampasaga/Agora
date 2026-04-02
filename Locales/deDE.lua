@@ -3,7 +3,7 @@
 
 if GetLocale() ~= "deDE" then return end
 
-local L = GuildForge.L
+local L = Agora.L
 
 -- Core
 L["CORE_ScanComplete"]      = "Scan und Übertragung abgeschlossen."

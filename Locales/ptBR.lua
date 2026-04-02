@@ -3,7 +3,7 @@
 
 if GetLocale() ~= "ptBR" then return end
 
-local L = GuildForge.L
+local L = Agora.L
 
 -- Core
 L["CORE_ScanComplete"]      = "Escaneamento e transmissão concluídos."
