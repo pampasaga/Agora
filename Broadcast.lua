@@ -1,7 +1,7 @@
 -- GuildForge - Broadcast.lua
 -- Serialization, chunking, sending and receiving guild data
 
-local GC = GuildForge
+local GC = Agora
 
 -- TBC Anniversary compatibility: SendAddonMessage is in C_ChatInfo
 local SendAddonMsg = (C_ChatInfo and C_ChatInfo.SendAddonMessage) or SendAddonMessage
@@ -140,9 +140,9 @@ end
 
 -- Broadcast own data to the entire guild
 function GC:SendMyData()
-    if not IsInGuild() or not GuildForgeDB then return end
+    if not IsInGuild() or not AgoraDB then return end
     local myKey = GC:GetMyKey()
-    local data  = GuildForgeDB.members[myKey]
+    local data  = AgoraDB.members[myKey]
     if not data then return end
     -- Do not broadcast if no profession scanned (avoids overwriting others' data)
     if not data.professions or #data.professions == 0 then return end
@@ -181,10 +181,10 @@ end
 -- Send all stored data (response to a HELLO)
 -- Random delay to prevent everyone from responding at the same time
 function GC:SendFullGuildData()
-    if not GuildForgeDB then return end
+    if not AgoraDB then return end
     local delay = math.random() * 3  -- 0-3s random
     local extra = 0
-    for key, memberData in pairs(GuildForgeDB.members) do
+    for key, memberData in pairs(AgoraDB.members) do
         local k, d = key, memberData
         GC:After(delay + extra, function()
             GC:SendChunked(k, GC:Serialize(d))
@@ -224,6 +224,12 @@ function GC:OnMessage(sender, message)
         -- Accumulate chunks
         if not GC.incoming[senderKey] then
             GC.incoming[senderKey] = { total = total, count = 0, chunks = {} }
+            -- Timeout: drop incomplete transfers after 60s to avoid memory leak
+            GC:After(60, function()
+                if GC.incoming[senderKey] then
+                    GC.incoming[senderKey] = nil
+                end
+            end)
         end
 
         local inc = GC.incoming[senderKey]
@@ -243,10 +249,10 @@ function GC:OnMessage(sender, message)
             local memberData = GC:Deserialize(full)
             if memberData and memberData.name ~= "" then
                 local key = memberData.name .. "-" .. memberData.realm
-                local existing = GuildForgeDB.members[key]
+                local existing = AgoraDB.members[key]
                 if not existing or memberData.timestamp >= existing.timestamp then
-                    GuildForgeDB.members[key] = memberData
-                    print("|cff00ccffGuildForge:|r Donnees recues de " .. memberData.name .. ".")
+                    AgoraDB.members[key] = memberData
+                    print("|cff00ccffAgora:|r " .. string.format(GC.L["BROADCAST_DataReceived"], memberData.name))
                     if GC.mainFrame and GC.mainFrame:IsShown() then
                         GC:RefreshUI()
                     end
@@ -261,8 +267,8 @@ function GC:OnMessage(sender, message)
             if compareVersions(theirVersion, GC.VERSION_STRING) > 0 then
                 GC._newerVersionKnown = true
                 GC._newerVersionSeen  = theirVersion
-                print("|cff00ccffGuildForge:|r " .. string.format(
-                    GuildForge.L["CORE_NewVersion"], theirVersion))
+                print("|cff00ccffAgora:|r " .. string.format(
+                    GC.L["CORE_NewVersion"], theirVersion))
                 if GC.UpdateFooterVersion then GC:UpdateFooterVersion() end
             end
         end

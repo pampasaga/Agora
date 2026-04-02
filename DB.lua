@@ -1,19 +1,19 @@
 -- GuildForge - DB.lua
--- Read / write member data in GuildForgeDB (SavedVariables)
+-- Read / write member data in AgoraDB (SavedVariables)
 
-local GC = GuildForge
+local GC = Agora
 
 -- Save or update a member
 function GC:SaveMember(data)
     if not data or not data.name or not data.realm then return end
     local key = data.name .. "-" .. data.realm
-    GuildForgeDB.members[key] = data
+    AgoraDB.members[key] = data
 end
 
 -- Remove a member by key
 function GC:RemoveMember(key)
-    if GuildForgeDB and GuildForgeDB.members then
-        GuildForgeDB.members[key] = nil
+    if AgoraDB and AgoraDB.members then
+        AgoraDB.members[key] = nil
     end
 end
 
@@ -35,15 +35,15 @@ end
 -- Returns only members of the current guild (filtered by WoW roster)
 -- The current player is always included (to see their own recipes while out of guild)
 function GC:GetAllMembers()
-    if not GuildForgeDB then return {} end
+    if not AgoraDB then return {} end
 
     local myKey = GC:GetMyKey()
 
     if not IsInGuild() then
         -- Out of guild: only own data
         local result = {}
-        if myKey and GuildForgeDB.members[myKey] then
-            result[myKey] = GuildForgeDB.members[myKey]
+        if myKey and AgoraDB.members[myKey] then
+            result[myKey] = AgoraDB.members[myKey]
         end
         return result
     end
@@ -51,19 +51,19 @@ function GC:GetAllMembers()
     local roster = GC:GetCurrentGuildSet()
     -- If the roster is not yet loaded, return everything (avoids empty UI at boot)
     if next(roster) == nil then
-        return GuildForgeDB.members or {}
+        return AgoraDB.members or {}
     end
 
     local result = {}
-    for key, data in pairs(GuildForgeDB.members or {}) do
+    for key, data in pairs(AgoraDB.members or {}) do
         local base = key:match("^([^%-]+)") or key
         if roster[base] then
             result[key] = data
         end
     end
     -- Always include the current player even if the roster is partial
-    if myKey and GuildForgeDB.members[myKey] then
-        result[myKey] = GuildForgeDB.members[myKey]
+    if myKey and AgoraDB.members[myKey] then
+        result[myKey] = AgoraDB.members[myKey]
     end
     return result
 end
@@ -104,7 +104,7 @@ end
 
 -- Purge members who are no longer in the guild
 function GC:CleanupDepartedMembers()
-    if not IsInGuild() or not GuildForgeDB then return end
+    if not IsInGuild() or not AgoraDB then return end
 
     -- Build a set of current members (by base name)
     local current = {}
@@ -131,11 +131,11 @@ function GC:CleanupDepartedMembers()
     end
 
     -- Remove those who are no longer in the guild
-    for key in pairs(GuildForgeDB.members) do
+    for key in pairs(AgoraDB.members) do
         local baseName = key:match("^([^%-]+)") or key
         if not current[baseName] then
-            print("|cff00ccffGuildForge:|r " .. baseName .. " a quitte la guilde, donnees supprimees.")
-            GuildForgeDB.members[key] = nil
+            print("|cff00ccffAgora:|r " .. string.format(GC.L["DB_MemberLeft"], baseName))
+            AgoraDB.members[key] = nil
         end
     end
 end

@@ -1,32 +1,33 @@
 -- GuildForge - Core.lua
 -- Namespace, initialization, event management
 
-GuildForge = {}
-local GC = GuildForge
+GuildForge = GuildForge or {}  -- garde compat pendant transition
+Agora = GuildForge              -- alias principal
+local GC = Agora
 
 -- Slash commands first, before any code that could crash
-SLASH_GUILDFORGE1 = "/guildforge"
-SLASH_GUILDFORGE2 = "/gf"
-SlashCmdList["GUILDFORGE"] = function(msg)
+SLASH_AGORA1 = "/agora"
+SLASH_AGORA2 = "/ag"
+SlashCmdList["AGORA"] = function(msg)
     if GC.ToggleUI then
         local ok, err = pcall(function()
             if msg == "scan" then
                 GC:ScanProfessionLevels()
                 GC:SendMyData()
-                print("|cff00ff00GuildForge:|r " .. (GuildForge.L and GuildForge.L["CORE_ScanDone"] or "Scan done."))
+                print("|cff00ff00Agora:|r " .. (GC.L and GC.L["CORE_ScanDone"] or "Scan done."))
             elseif msg == "debug" then
                 GC:ToggleDebug()
             else
                 GC:ToggleUI()
             end
         end)
-        if not ok then print("|cffff0000GuildForge:|r " .. tostring(err)) end
+        if not ok then print("|cffff0000Agora:|r " .. tostring(err)) end
     end
 end
 
-GC.PREFIX         = "GCRAFT"
-GC.VERSION        = 1
-GC.VERSION_STRING = "0.9.0"
+GC.PREFIX         = "AGORA"
+GC.VERSION        = 2
+GC.VERSION_STRING = "1.0.0"
 GC.devMode        = false
 
 -- Locale string table. Populated by Locales/ files loaded after Core.lua.
@@ -58,8 +59,8 @@ elseif RegisterAddonMessagePrefix then
 end
 
 -- Immediate DB initialization
-if not GuildForgeDB then
-    GuildForgeDB = { members = {}, version = GC.VERSION }
+if not AgoraDB then
+    AgoraDB = { members = {}, version = GC.VERSION }
 end
 
 -- Main event frame
@@ -75,11 +76,6 @@ eventFrame:RegisterEvent("CRAFT_SHOW")
 eventFrame:RegisterEvent("CRAFT_UPDATE")
 eventFrame:RegisterEvent("PLAYER_GUILD_UPDATE")
 eventFrame:RegisterEvent("TRADE_SKILL_CLOSE")
--- SKILL_LINES_CHANGED : replacement for LEARNED_SPELL_IN_TAB on TBC (tested with pcall)
-local ok_slc = pcall(function() eventFrame:RegisterEvent("SKILL_LINES_CHANGED") end)
-if not ok_slc then
-    GC:Log("[INIT] SKILL_LINES_CHANGED non supporte sur ce client")
-end
 
 eventFrame:SetScript("OnEvent", function(self, event, ...)
     if event == "PLAYER_LOGIN" or (event == "PLAYER_ENTERING_WORLD" and not GC._loginDone) then
@@ -143,14 +139,6 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
             GC:ScanCraftRecipes()
         end)
 
-    elseif event == "SKILL_LINES_CHANGED" then
-        if GC._initComplete then
-            GC:After(0.5, function()
-                GC:ScanProfessionLevels()
-                GC:SendMyData()
-                print("|cff00ccffGuildForge:|r " .. (GuildForge.L and GuildForge.L["CORE_NewRecipeLearned"] or "New recipe learned, synced with the guild."))
-            end)
-        end
 
     elseif event == "TRADE_SKILL_CLOSE" then
         if GC._initComplete and IsInGuild() then
@@ -207,8 +195,8 @@ function GC:GetMyKey()
 end
 
 function GC:OnLogin()
-    if not GuildForgeDB then
-        GuildForgeDB = { members = {}, version = GC.VERSION }
+    if not AgoraDB then
+        AgoraDB = { members = {}, version = GC.VERSION }
     end
 
     -- Scan always runs, in guild or not
@@ -219,7 +207,7 @@ function GC:OnLogin()
         -- Check if any recipes are already in the DB
         local myKey = GC:GetMyKey()
         local hasRecipes = false
-        local member = GuildForgeDB and GuildForgeDB.members and GuildForgeDB.members[myKey]
+        local member = AgoraDB and AgoraDB.members and AgoraDB.members[myKey]
         if member then
             for _, prof in ipairs(member.professions or {}) do
                 if prof.recipes and #prof.recipes > 0 then hasRecipes = true; break end
@@ -231,7 +219,7 @@ function GC:OnLogin()
             GC:SendHello()
             GC:SendVersion()
             if not hasRecipes then
-                print("|cff00ccffGuildForge:|r " .. (GuildForge.L and GuildForge.L["CORE_OpenWindows"] or "Open your profession windows to share your recipes."))
+                print("|cff00ccffAgora:|r " .. (GC.L and GC.L["CORE_OpenWindows"] or "Open your profession windows to share your recipes."))
             end
         end
     end)
@@ -240,7 +228,7 @@ function GC:OnLogin()
         GC._inGuild = true
         GC:After(5, function()
             GC:SendMyData()
-            print("|cff00ccffGuildForge:|r " .. (GuildForge.L and GuildForge.L["CORE_RecipesUpdated"] or "Recipes synced with the guild."))
+            print("|cff00ccffAgora:|r " .. (GC.L and GC.L["CORE_RecipesUpdated"] or "Recipes synced with the guild."))
         end)
     end
 end
@@ -253,6 +241,6 @@ function GC:OnAddonMessage(prefix, message, channel, sender)
 end
 
 function GC:OnRosterUpdate()
-    if not GuildForgeDB then return end
+    if not AgoraDB then return end
     GC:CleanupDepartedMembers()
 end

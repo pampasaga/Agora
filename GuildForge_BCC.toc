@@ -1,12 +1,12 @@
 ## Interface: 20505
-## Title: GuildForge
-## Notes: Guild profession and recipe directory. Broadcasts your trade skills to guildmates automatically.
-## Notes-frFR: Repertoire des metiers et recettes de la guilde. Diffuse automatiquement vos competences.
-## Version: 0.9.0
+## Title: Agora
+## Notes: Verified craft marketplace for your guild and realm.
+## Notes-frFR: Marche de services de craft verifies pour ta guilde et ton serveur.
+## Version: 1.0.0
 ## Author: Pampasaga
 ## IconTexture: Interface\AddOns\GuildForge\GuildForge_icon
-## SavedVariables: GuildForgeDB
-## X-Website: https://github.com/pampa/GuildForge
+## SavedVariables: AgoraDB
+## X-Website: https://github.com/pampasaga/Agora
 ## X-License: MIT
 
 Core.lua

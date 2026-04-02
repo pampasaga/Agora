@@ -2,8 +2,8 @@
 -- Main interface: Recipes view (split panel) + Members view
 -- Window 820x580, left panel = list, right panel = detail
 
-local GC = GuildForge
-local L  = GuildForge.L
+local GC = Agora
+local L  = Agora.L
 
 -- General dimensions
 local UI_W      = 820
@@ -391,10 +391,15 @@ local function HideTooltip()
     if ShoppingTooltip2 then ShoppingTooltip2:Hide() end
 end
 
--- Shows the tooltip for an entry (item or spell) anchored to a frame
+-- Shows the tooltip for an entry (recipe spell first, item as fallback) anchored to a frame
 local function ShowEntryTooltip(anchor, entry)
     GameTooltip:SetOwner(anchor, "ANCHOR_RIGHT")
-    if entry.itemLink then
+    if entry.spellID then
+        local sl = "|cff71d5ff|Hspell:" .. entry.spellID
+                .. "|h[" .. (entry.name or "") .. "]|h|r"
+        GameTooltip:SetHyperlink(sl)
+        GameTooltip:Show()
+    elseif entry.itemLink then
         GameTooltip:SetHyperlink(entry.itemLink)
         GameTooltip:Show()
         if GameTooltip_ShowCompareItem then GameTooltip_ShowCompareItem() end
@@ -402,11 +407,6 @@ local function ShowEntryTooltip(anchor, entry)
         GameTooltip:SetHyperlink("item:" .. entry.itemID)
         GameTooltip:Show()
         if GameTooltip_ShowCompareItem then GameTooltip_ShowCompareItem() end
-    elseif entry.spellID then
-        local sl = "|cff71d5ff|Hspell:" .. entry.spellID
-                .. "|h[" .. (entry.name or "") .. "]|h|r"
-        GameTooltip:SetHyperlink(sl)
-        GameTooltip:Show()
     elseif entry.name then
         GameTooltip:SetText(entry.name)
         GameTooltip:Show()
@@ -1527,7 +1527,7 @@ local function ShowMemberDetail(panel, memberName, dbMember)
             empty:SetText(C_GRAY .. "Ouvrez vos fenetres de metiers\npour scanner vos patrons." .. C_RESET)
         else
             empty:SetText(C_GRAY .. "Demandez a " .. memberName
-                .. " de telecharger GuildForge\net d'ouvrir ses metiers pour scanner ses patrons." .. C_RESET)
+                .. " de telecharger Agora\net d'ouvrir ses metiers pour scanner ses patrons." .. C_RESET)
         end
         table.insert(w.scrollChild._profRows, empty)
         sy = sy - 36
@@ -1647,7 +1647,7 @@ function GC:CreateUI()
     if GC.mainFrame then return end
 
     local template = BackdropTemplateMixin and "BackdropTemplate" or nil
-    local frame = CreateFrame("Frame", "GuildForgeMainFrame", UIParent, template)
+    local frame = CreateFrame("Frame", "AgoraMainFrame", UIParent, template)
     frame:SetFrameStrata("HIGH")
     frame:SetSize(UI_W, UI_H)
     frame:SetPoint("CENTER")
@@ -1658,7 +1658,7 @@ function GC:CreateUI()
     frame:SetScript("OnDragStop",  frame.StopMovingOrSizing)
     frame:SetClampedToScreen(true)
     frame:Hide()
-    tinsert(UISpecialFrames, "GuildForgeMainFrame")
+    tinsert(UISpecialFrames, "AgoraMainFrame")
 
     -- Dark backdrop
     if frame.SetBackdrop then
@@ -1702,7 +1702,7 @@ function GC:CreateUI()
 
     local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOP", frame, "TOP", 8, -(8 + TITLE_H / 2 - 6))
-    title:SetText(C_GOLD .. "GuildForge" .. C_RESET)
+    title:SetText(C_GOLD .. "Agora" .. C_RESET)
 
     -- Close button
     local closeBtn = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
@@ -1800,7 +1800,7 @@ function GC:CreateUI()
     sbIcon:SetVertexColor(0.8, 0.75, 0.5, 0.9)
 
     -- EditBox
-    local searchBox = CreateFrame("EditBox", "GuildForgeSearchBox", sbContainer)
+    local searchBox = CreateFrame("EditBox", "AgoraSearchBox", sbContainer)
     searchBox:SetFontObject("GameFontNormalSmall")
     searchBox:SetAutoFocus(false)
     searchBox:SetMaxLetters(60)
@@ -1928,14 +1928,14 @@ function GC:CreateUI()
 
     -- ── Left panel: scroll frame list ──
     local listY = contentY + 26  -- room for catArea (22px) + gap (4px)
-    local scrollLeft = CreateFrame("ScrollFrame", "GuildForgeScrollLeft", frame,
+    local scrollLeft = CreateFrame("ScrollFrame", "AgoraScrollLeft", frame,
                                     "UIPanelScrollFrameTemplate")
     scrollLeft:SetPoint("TOPLEFT",    frame, "TOPLEFT",  14, -listY)
     scrollLeft:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 14, 42)
     scrollLeft:SetWidth(LEFT_W - 20)
     frame.scrollLeft = scrollLeft
 
-    local contentLeft = CreateFrame("Frame", "GuildForgeContentLeft", scrollLeft)
+    local contentLeft = CreateFrame("Frame", "AgoraContentLeft", scrollLeft)
     contentLeft:SetWidth(LEFT_W - 38)
     contentLeft:SetHeight(1)
     scrollLeft:SetScrollChild(contentLeft)
@@ -1963,7 +1963,7 @@ function GC:CreateUI()
     footerBg:SetColorTexture(0.035, 0.02, 0.005, 0.9)
 
     -- Copyable link popup (shared by all footer links)
-    local linkPopup = CreateFrame("Frame", "GuildForgeLinkPopup", UIParent,
+    local linkPopup = CreateFrame("Frame", "AgoraLinkPopup", UIParent,
                                   BackdropTemplateMixin and "BackdropTemplate" or nil)
     linkPopup:SetSize(360, 108)
     linkPopup:SetPoint("CENTER")
@@ -1978,7 +1978,7 @@ function GC:CreateUI()
     -- popup is open, so CloseSpecialWindows() doesn't close both at once.
     local function removeMainFromSpecial()
         for i = #UISpecialFrames, 1, -1 do
-            if UISpecialFrames[i] == "GuildForgeMainFrame" then
+            if UISpecialFrames[i] == "AgoraMainFrame" then
                 table.remove(UISpecialFrames, i)
                 break
             end
@@ -1986,9 +1986,9 @@ function GC:CreateUI()
     end
     local function addMainToSpecial()
         for _, v in ipairs(UISpecialFrames) do
-            if v == "GuildForgeMainFrame" then return end
+            if v == "AgoraMainFrame" then return end
         end
-        tinsert(UISpecialFrames, "GuildForgeMainFrame")
+        tinsert(UISpecialFrames, "AgoraMainFrame")
     end
 
     linkPopup:SetScript("OnShow", function()
@@ -1996,13 +1996,13 @@ function GC:CreateUI()
         -- Register popup so Escape closes it (not the GameMenu)
         local found = false
         for _, v in ipairs(UISpecialFrames) do
-            if v == "GuildForgeLinkPopup" then found = true; break end
+            if v == "AgoraLinkPopup" then found = true; break end
         end
-        if not found then tinsert(UISpecialFrames, "GuildForgeLinkPopup") end
+        if not found then tinsert(UISpecialFrames, "AgoraLinkPopup") end
     end)
     linkPopup:SetScript("OnHide", function()
         for i = #UISpecialFrames, 1, -1 do
-            if UISpecialFrames[i] == "GuildForgeLinkPopup" then
+            if UISpecialFrames[i] == "AgoraLinkPopup" then
                 table.remove(UISpecialFrames, i); break
             end
         end
@@ -2031,7 +2031,7 @@ function GC:CreateUI()
     popupDesc:SetText("")
     linkPopup.desc = popupDesc
 
-    local popupBox = CreateFrame("EditBox", "GuildForgeLinkBox", linkPopup)
+    local popupBox = CreateFrame("EditBox", "AgoraLinkBox", linkPopup)
     popupBox:SetFontObject("GameFontNormalSmall")
     popupBox:SetPoint("TOPLEFT",     popupDesc, "BOTTOMLEFT",  0, -8)
     popupBox:SetPoint("BOTTOMRIGHT", linkPopup, "BOTTOMRIGHT", -40, 16)
@@ -3124,8 +3124,8 @@ function GC:RefreshUI()
     local function GetOnboardingHint()
         if not IsInGuild() then return nil end
         -- If any guild member has recipes, the list has content: just show "Select a recipe"
-        if GuildForgeDB and GuildForgeDB.members then
-            for _, member in pairs(GuildForgeDB.members) do
+        if AgoraDB and AgoraDB.members then
+            for _, member in pairs(AgoraDB.members) do
                 for _, prof in ipairs(member.professions or {}) do
                     if prof.recipes and #prof.recipes > 0 then return nil end
                 end
@@ -3195,7 +3195,7 @@ function GC:ToggleUI()
         end
     end)
     if not ok then
-        print("|cffff0000" .. (L["CORE_ErrorPrefix"] or "GuildForge error: ") .. "|r"
+        print("|cffff0000" .. (L["CORE_ErrorPrefix"] or "Agora error: ") .. "|r"
               .. tostring(err))
     end
 end

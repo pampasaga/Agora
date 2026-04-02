@@ -1,10 +1,10 @@
 -- GuildForge - Minimap.lua
 -- Structure identique a LibDBIcon-1.0 (copie exacte de createButton)
 
-local GC = GuildForge
-local L  = GuildForge.L
+local GC = Agora
+local L  = Agora.L
 
-local button = CreateFrame("Button", "LibDBIcon10_GuildForge", Minimap)
+local button = CreateFrame("Button", "LibDBIcon10_Agora", Minimap)
 button:SetFrameStrata("MEDIUM")
 button:SetFrameLevel(8)
 button:SetSize(31, 31)
@@ -34,7 +34,7 @@ button.icon = icon
 local rad, cos, sin = math.rad, math.cos, math.sin
 
 local function UpdatePosition()
-    local angle  = GuildForgeDB and GuildForgeDB.minimapAngle or 45
+    local angle  = AgoraDB and AgoraDB.minimapAngle or 45
     local r      = rad(angle)
     local w      = (Minimap:GetWidth()  / 2) + 5
     local h      = (Minimap:GetHeight() / 2) + 5
@@ -51,8 +51,8 @@ button:SetScript("OnDragStart", function(self)
         local scale  = Minimap:GetEffectiveScale()
         cx, cy = cx / scale, cy / scale
         local newAngle = math.deg(math.atan2(cy - my, cx - mx)) % 360
-        if GuildForgeDB then
-            GuildForgeDB.minimapAngle = newAngle
+        if AgoraDB then
+            AgoraDB.minimapAngle = newAngle
         end
         UpdatePosition()
     end)
@@ -97,8 +97,8 @@ end)
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("PLAYER_LOGIN")
 initFrame:SetScript("OnEvent", function()
-    if GuildForgeDB and not GuildForgeDB.minimapAngle then
-        GuildForgeDB.minimapAngle = 45
+    if AgoraDB and not AgoraDB.minimapAngle then
+        AgoraDB.minimapAngle = 45
     end
     UpdatePosition()
 end)
