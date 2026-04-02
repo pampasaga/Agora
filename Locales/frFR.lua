@@ -96,6 +96,7 @@ L["FILTER_food"]            = "Nourriture"
 -- UI redesign
 L["UI_AllProfs"]            = "Tous"
 L["UI_GuildOnly"]           = "Guilde seul."
+L["UI_ImportantOnly"]       = "Important"
 L["UI_SelectRecipe"]        = "Selectionnez un patron"
 L["UI_SelectMember"]        = "Selectionnez un membre"
 L["UI_SkillReq"]            = "Recette"

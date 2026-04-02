@@ -1,5 +1,5 @@
 -- GuildForge - UI.lua
--- Main interface: Recipes view (split panel) + Members view
+-- Main interface: Recipes view (split panel)
 -- Window 820x580, left panel = list, right panel = detail
 
 local GC = Agora
@@ -215,11 +215,10 @@ local WOWHEAD_LANG = {
 GC.viewMode       = "patrons"
 GC.selectedProf   = nil
 GC.selectedRecipe = nil
-GC.selectedMember = nil
-GC.filterCategory = nil
-GC.filterSpec     = nil
-GC.showGuildOnly  = false
-GC.currentSearch  = ""
+GC.filterCategory  = nil
+GC.showGuildOnly   = false
+GC.filterImportant = false
+GC.currentSearch   = ""
 
 -- ============================================================================
 -- Helpers
@@ -609,10 +608,11 @@ local function BuildPatronMap(profFilter, catFilter, search, guildOnly)
         local profOk   = (not profFilter) or (entry.prof == profFilter)
         local catOk    = (not catFilter)  or (entry.category == catFilter)
         local searchOk = (search == "")   or entryName:lower():find(search, 1, true)
-        local gk       = guildKnown[entry.prof:lower()] and guildKnown[entry.prof:lower()][entryName:lower()]
-        local knownOk  = (not guildOnly) or (gk ~= nil)
+        local gk          = guildKnown[entry.prof:lower()] and guildKnown[entry.prof:lower()][entryName:lower()]
+        local knownOk     = (not guildOnly) or (gk ~= nil)
+        local importantOk = (not GC.filterImportant) or (entry.important == true)
 
-        if expOk and profOk and catOk and searchOk and knownOk then
+        if expOk and profOk and catOk and searchOk and knownOk and importantOk then
             ensureProf(entry.prof)
 
             local entryIcon = ResolveIcon({ icon=gk and gk.icon, itemID=entry.itemID, spellID=entry.spellID })
@@ -641,6 +641,7 @@ local function BuildPatronMap(profFilter, catFilter, search, guildOnly)
                 icon      = entryIcon,
                 itemLink  = gk and gk.itemLink,
                 minSkill  = (gk and gk.minSkill) or entry.minSkill,
+                important = entry.important,
             })
             dbShown[entry.prof][entryName:lower()] = true
         end
@@ -697,9 +698,12 @@ local function BuildPatronMap(profFilter, catFilter, search, guildOnly)
         end
     end
 
-    -- Sort: minSkill descending, then alphabetical
+    -- Sort: important first, then minSkill descending, then alphabetical
     for _, pName in ipairs(order) do
         table.sort(map[pName], function(a, b)
+            if (a.important == true) ~= (b.important == true) then
+                return a.important == true
+            end
             local sa = a.minSkill or 0
             local sb = b.minSkill or 0
             if sa ~= sb then return sa > sb end
@@ -1103,12 +1107,6 @@ end
 -- Updates the recipe detail panel
 local function ShowRecipeDetail(panel, entry, onlineCache)
     HideSearchResults(panel)
-    -- Hide member view widgets if they were active
-    if panel.memberWidgets then
-        panel.memberWidgets.nameLabel:Hide()
-        panel.memberWidgets.statusLabel:Hide()
-        panel.memberWidgets.scrollFrame:Hide()
-    end
     panel:Show()
     panel.hint:Hide()
     if panel.emptyIcon then panel.emptyIcon:Hide() end
@@ -1415,229 +1413,7 @@ local function ShowRecipeDetail(panel, entry, onlineCache)
     panel.craftersSection:SetHeight(crafterH)
 end
 
--- Updates the member detail panel
-local function ShowMemberDetail(panel, memberName, dbMember)
-    HideSearchResults(panel)
-    panel:Show()
-    panel.hint:Hide()
-    if panel.emptyIcon then panel.emptyIcon:Hide() end
-    -- Hide recipe widgets if they exist
-    if panel.topBg then panel.topBg:Hide() end
-    if panel.detailIcon then panel.detailIcon:Hide() end
-    if panel.detailName then panel.detailName:Hide() end
-    if panel.detailExpTag then panel.detailExpTag:Hide() end
-    if panel.detailSkillTag then panel.detailSkillTag:Hide() end
-    if panel.detailDesc then panel.detailDesc:Hide() end
-    if panel.detailUrlRow then panel.detailUrlRow:Hide() end
-    if panel.detailUrlLabel1 then panel.detailUrlLabel1:Hide() end
-    if panel.detailUrlBox1 then panel.detailUrlBox1:Hide() end
-    if panel.detailUrlLabel2 then panel.detailUrlLabel2:Hide() end
-    if panel.detailUrlBox2 then panel.detailUrlBox2:Hide() end
-    if panel.detailSep1 then panel.detailSep1:Hide() end
-    if panel.detailReagentsLabel then panel.detailReagentsLabel:Hide() end
-    for i = 1, MAX_REAGENTS do
-        if panel.detailReagents and panel.detailReagents[i] then
-            panel.detailReagents[i]:Hide()
-        end
-    end
-    if panel.detailCandidatesLabel then panel.detailCandidatesLabel:Hide() end
-    if panel.detailCraftersLabel then panel.detailCraftersLabel:Hide() end
-    for i = 1, MAX_CRAFTERS do
-        if panel.detailCrafters and panel.detailCrafters[i] then
-            panel.detailCrafters[i]:Hide()
-        end
-    end
-    if panel.detailOnlineLbl then panel.detailOnlineLbl:Hide() end
-    if panel.reagSection then panel.reagSection:Hide() end
-    if panel.craftersSection then panel.craftersSection:Hide() end
-    if panel.colDiv then panel.colDiv:Hide() end
-
-    -- Member widgets (created on demand)
-    if not panel.memberWidgets then
-        panel.memberWidgets = {}
-
-        local w = panel.memberWidgets
-        w.nameLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-        w.nameLabel:SetJustifyH("LEFT")
-        w.nameLabel:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -10)
-        w.nameLabel:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -10, -10)
-
-        w.statusLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        w.statusLabel:SetJustifyH("LEFT")
-        w.statusLabel:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -34)
-
-        -- Scroll frame for professions
-        local sf = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
-        sf:SetPoint("TOPLEFT",     panel, "TOPLEFT",  10, -56)
-        sf:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -26, 10)
-        w.scrollFrame = sf
-
-        local sc = CreateFrame("Frame", nil, sf)
-        sc:SetWidth(sf:GetWidth() or 400)
-        sf:SetScrollChild(sc)
-        w.scrollChild = sc
-    end
-
-    local w = panel.memberWidgets
-    w.nameLabel:Show()
-    w.statusLabel:Show()
-    w.scrollFrame:Show()
-    w.scrollChild:Show()
-
-    -- Name colored by class
-    local onlineCache = BuildOnlineCache()
-    local info = onlineCache[memberName]
-    local cc = ""
-    if info and info.class then cc = CLASS_COLOR[info.class] or "" end
-    w.nameLabel:SetText(cc .. memberName .. C_RESET)
-
-    -- Statut / timestamp
-    if not dbMember then
-        w.statusLabel:SetText(C_GRAY .. (L["UI_LastSeenNever"] or "No data yet") .. C_RESET)
-    else
-        local freshness = GetMemberFreshness(dbMember)
-        local rel = RelativeTime(dbMember.timestamp)
-        if rel then
-            local txt = string.format(L["UI_LastSeen"] or "Last seen: %s ago", rel)
-            if freshness == "stale" then
-                txt = txt .. "  " .. C_ORANGE .. (L["UI_StaleWarning"] or "Outdated") .. C_RESET
-            end
-            w.statusLabel:SetText(C_GRAY .. txt .. C_RESET)
-        else
-            w.statusLabel:SetText(C_GRAY .. (L["UI_LastSeenNever"] or "No data yet") .. C_RESET)
-        end
-    end
-
-    -- Profession list in the scroll child
-    -- Recycle old widgets
-    if w.scrollChild._profRows then
-        for _, f in ipairs(w.scrollChild._profRows) do f:Hide() end
-    end
-    w.scrollChild._profRows = {}
-
-    local sy = 0
-    local professions = dbMember and dbMember.professions or {}
-
-    if #professions == 0 then
-        local empty = w.scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        empty:SetPoint("TOPLEFT", w.scrollChild, "TOPLEFT", 0, sy)
-        local myKey = GC:GetMyKey()
-        local myName = myKey and myKey:match("^([^%-]+)") or ""
-        if memberName == myName then
-            empty:SetText(C_GRAY .. "Ouvrez vos fenetres de metiers\npour scanner vos patrons." .. C_RESET)
-        else
-            empty:SetText(C_GRAY .. "Demandez a " .. memberName
-                .. " de telecharger Agora\net d'ouvrir ses metiers pour scanner ses patrons." .. C_RESET)
-        end
-        table.insert(w.scrollChild._profRows, empty)
-        sy = sy - 36
-    else
-        for _, prof in ipairs(professions) do
-            -- Profession header
-            local hdr = CreateFrame("Frame", nil, w.scrollChild)
-            hdr:SetHeight(24)
-            hdr:SetPoint("TOPLEFT",  w.scrollChild, "TOPLEFT",  0, sy)
-            hdr:SetPoint("TOPRIGHT", w.scrollChild, "TOPRIGHT", 0, sy)
-            table.insert(w.scrollChild._profRows, hdr)
-
-            local bg = hdr:CreateTexture(nil, "BACKGROUND")
-            bg:SetAllPoints()
-            bg:SetTexture("Interface\\Tooltips\\UI-Tooltip-Background")
-            bg:SetVertexColor(0.15, 0.08, 0.02, 0.9)
-
-            local ic = hdr:CreateTexture(nil, "ARTWORK")
-            ic:SetSize(16, 16)
-            ic:SetPoint("LEFT", hdr, "LEFT", 2, 0)
-            local iconPath = PROF_ICONS[prof.name]
-            if iconPath then ic:SetTexture(iconPath) end
-
-            local lbl = hdr:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            lbl:SetJustifyH("LEFT")
-            lbl:SetPoint("LEFT", hdr, "LEFT", 22, 0)
-            local specTag = prof.specialization
-                and ("  " .. C_ORANGE .. "[" .. prof.specialization .. "]" .. C_RESET)
-                or ""
-            lbl:SetText(C_GOLD .. (PROF_DISPLAY[prof.name] or prof.name or "") .. C_RESET
-                .. specTag
-                .. "  " .. C_GRAY
-                .. (prof.level or 0) .. "/" .. (prof.maxLevel or 300)
-                .. C_RESET)
-
-            sy = sy - 26
-
-            local recipes = prof.recipes or {}
-            if #recipes == 0 then
-                local hint = w.scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                hint:SetPoint("TOPLEFT", w.scrollChild, "TOPLEFT", 12, sy)
-                hint:SetText(C_GRAY .. (L["UI_NoRecipes"] or "Open trade skill to scan.") .. C_RESET)
-                table.insert(w.scrollChild._profRows, hint)
-                sy = sy - 18
-            else
-                -- Build an index of RecipeDB entries for this profession (quality, spellID, etc.)
-                local dbIndex = {}
-                local dbMap = BuildPatronMap(prof.name, nil, "", false)
-                for _, e in ipairs(dbMap[prof.name] or {}) do
-                    if e.name then dbIndex[e.name:lower()] = e end
-                end
-
-                for _, recipe in ipairs(recipes) do
-                    local btn = CreateFrame("Button", nil, w.scrollChild)
-                    btn:SetHeight(20)
-                    btn:SetPoint("TOPLEFT",  w.scrollChild, "TOPLEFT",  12, sy)
-                    btn:SetPoint("TOPRIGHT", w.scrollChild, "TOPRIGHT", -4, sy)
-                    table.insert(w.scrollChild._profRows, btn)
-
-                    local ic2 = btn:CreateTexture(nil, "ARTWORK")
-                    ic2:SetSize(16, 16)
-                    ic2:SetPoint("LEFT", btn, "LEFT", 0, 0)
-                    local iconTex = recipe.icon
-                    if not iconTex and recipe.itemLink then
-                        local lid = recipe.itemLink:match("item:(%d+)")
-                        if lid then
-                            local _, _, _, _, _, _, _, _, _, t = GetItemInfo(tonumber(lid))
-                            iconTex = t
-                        end
-                    end
-                    ic2:SetTexture(iconTex or "Interface\\Icons\\INV_Misc_QuestionMark")
-
-                    local dbEntry = dbIndex[(recipe.name or ""):lower()]
-                    local q = dbEntry and dbEntry.quality or 2
-                    local qc2 = QUALITY_COLOR[q] or QUALITY_COLOR[2]
-
-                    local rLbl = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                    rLbl:SetPoint("LEFT",  btn, "LEFT",  20, 0)
-                    rLbl:SetPoint("RIGHT", btn, "RIGHT",  0, 0)
-                    rLbl:SetJustifyH("LEFT")
-                    rLbl:SetText(qc2 .. (recipe.name or "") .. C_RESET)
-
-                    local hl = btn:CreateTexture(nil, "HIGHLIGHT")
-                    hl:SetAllPoints()
-                    hl:SetColorTexture(1, 1, 1, 0.07)
-
-                    local capRecipe = recipe
-                    local capEntry  = dbEntry
-                    local capProf   = prof.name
-                    btn:SetScript("OnClick", function()
-                        local entry = capEntry or {
-                            name     = capRecipe.name,
-                            prof     = capProf,
-                            icon     = capRecipe.icon,
-                            itemLink = capRecipe.itemLink,
-                            reagents = capRecipe.reagents,
-                            quality  = 2,
-                        }
-                        ShowRecipeDetail(GC.mainFrame.detailPanel, entry, BuildOnlineCache())
-                    end)
-
-                    sy = sy - 20
-                end
-            end
-            sy = sy - 4
-        end
-    end
-
-    w.scrollChild:SetHeight(math.max(math.abs(sy) + 20, 1))
-end
+-- (ShowMemberDetail removed: members view no longer exists)
 
 -- ============================================================================
 -- Main UI creation
@@ -1735,28 +1511,8 @@ function GC:CreateUI()
     btnPatrons:SetText(L["UI_TabByRecipe"])
     frame.btnPatrons = btnPatrons
 
-    local btnMembres = CreateFrame("Button", nil, frame)
-    btnMembres:SetSize(120, VIEW_H)
-    btnMembres:SetPoint("LEFT", btnPatrons, "RIGHT", 14, 0)
-    btnMembres:SetNormalFontObject("GameFontNormal")
-    btnMembres:SetHighlightFontObject("GameFontNormal")
-    btnMembres:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestLogTitleHighlight", "ADD")
-    local bmHL = btnMembres:GetHighlightTexture()
-    if bmHL then bmHL:SetVertexColor(0.6, 0.5, 0.1) end
-    btnMembres:SetText(L["UI_TabByMember"])
-    frame.btnMembres = btnMembres
-
     btnPatrons:SetScript("OnClick", function()
-        GC.viewMode = "patrons"
-        GC.selectedMember = nil
-        GC.filterSpec = nil
-        GC:RefreshUI()
-    end)
-    btnMembres:SetScript("OnClick", function()
-        GC.viewMode = "membres"
-        GC.selectedRecipe = nil
         GC.filterCategory = nil
-        GC.filterSpec = nil
         GC:RefreshUI()
     end)
 
@@ -1918,6 +1674,40 @@ function GC:CreateUI()
     catCounter:Hide()
     frame.catCounter = catCounter
 
+    -- Importants toggle (always visible, right-anchored in catArea)
+    local impBtn = CreateFrame("Button", nil, frame)
+    impBtn:SetHeight(22)
+    local impLbl = impBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    impLbl:SetText("|cffffd700★ |r" .. (L["UI_ImportantOnly"] or "Important"))
+    impBtn:SetWidth(impLbl:GetStringWidth() + 20)
+    impLbl:SetPoint("CENTER", impBtn, "CENTER", 0, 0)
+    impBtn:SetPoint("RIGHT", catArea, "RIGHT", 0, 0)
+    impBtn:SetPoint("TOP",   catArea, "TOP",   0, 0)
+
+    local impBg = impBtn:CreateTexture(nil, "BACKGROUND")
+    impBg:SetAllPoints()
+    impBg:SetTexture("Interface\\Tooltips\\UI-Tooltip-Background")
+    impBtn.bg = impBg
+
+    local function updateImpBg()
+        if GC.filterImportant then
+            impBg:SetVertexColor(0.3, 0.18, 0.04, 0.95)
+        else
+            impBg:SetVertexColor(0.1, 0.07, 0.02, 0.7)
+        end
+    end
+    updateImpBg()
+
+    impBtn:SetScript("OnClick", function()
+        GC.filterImportant = not GC.filterImportant
+        updateImpBg()
+        GC:RefreshUI()
+    end)
+    impBtn:SetScript("OnEnter", function()
+        impBg:SetVertexColor(0.4, 0.25, 0.06, 1)
+    end)
+    impBtn:SetScript("OnLeave", updateImpBg)
+    frame.impBtn = impBtn
 
     -- Vertical divider between left and right panels
     local divider = frame:CreateTexture(nil, "BORDER")
@@ -2252,7 +2042,6 @@ function GC:BuildTabs()
         btn:SetScript("OnClick", function()
             GC.selectedProf    = profKey
             GC.filterCategory  = nil
-            GC.filterSpec      = nil
             GC.selectedRecipe  = nil
             for _, t in ipairs(frame.tabs) do
                 if t.updateBg then t.updateBg() end
@@ -2297,111 +2086,6 @@ function GC:BuildCatFilters()
 
     local prof = GC.selectedProf
     if not prof then return end
-
-    local isMembres = (GC.viewMode == "membres")
-
-    -- ── Members mode: filters by specialization ──────────────────────────────
-    if isMembres then
-        -- Collect known specializations for this profession from the DB
-        local specSet  = {}
-        local specList = {}
-        local allMembers = GC:GetAllMembers()
-        for _, m in pairs(allMembers) do
-            for _, p in ipairs(m.professions or {}) do
-                if p.name == prof and p.specialization and not specSet[p.specialization] then
-                    specSet[p.specialization] = true
-                    table.insert(specList, p.specialization)
-                end
-            end
-        end
-        table.sort(specList)
-        if #specList == 0 then return end
-
-        local x = 0
-
-        -- "All" button
-        do
-            local allBtn = CreateFrame("Button", nil, catArea)
-            allBtn:SetHeight(18)
-            local lbl = allBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            lbl:SetText(L["UI_AllProfs"] or "All")
-            local bw = lbl:GetStringWidth() + 10
-            allBtn:SetWidth(bw)
-            lbl:SetPoint("CENTER", allBtn, "CENTER", 0, 0)
-            allBtn:SetPoint("LEFT", catArea, "LEFT", x, 0)
-            local bg = allBtn:CreateTexture(nil, "BACKGROUND")
-            bg:SetAllPoints()
-            allBtn.bg = bg
-            local function updateBgAll()
-                bg:SetTexture("Interface\\Tooltips\\UI-Tooltip-Background")
-                if GC.filterSpec == nil then
-                    bg:SetVertexColor(0.3, 0.18, 0.04, 0.95)
-                else
-                    bg:SetVertexColor(0.1, 0.07, 0.02, 0.7)
-                end
-            end
-            updateBgAll()
-            allBtn.updateBg = updateBgAll
-            allBtn:SetScript("OnClick", function()
-                GC.filterSpec = nil
-                for _, b in ipairs(frame.catBtns) do
-                    if b.updateBg then b.updateBg() end
-                end
-                GC:RefreshUI()
-            end)
-            allBtn:SetScript("OnEnter", function(self)
-                self.bg:SetTexture("Interface\\Tooltips\\UI-Tooltip-Background")
-                self.bg:SetVertexColor(0.4, 0.25, 0.06, 1)
-            end)
-            allBtn:SetScript("OnLeave", updateBgAll)
-            x = x + bw + 4
-            table.insert(frame.catBtns, allBtn)
-        end
-
-        for _, spec in ipairs(specList) do
-            local btn = CreateFrame("Button", nil, catArea)
-            btn:SetHeight(18)
-            local lbl = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            lbl:SetText(spec)
-            local bw = lbl:GetStringWidth() + 10
-            btn:SetWidth(bw)
-            lbl:SetPoint("CENTER", btn, "CENTER", 0, 0)
-            btn:SetPoint("LEFT", catArea, "LEFT", x, 0)
-            local bg = btn:CreateTexture(nil, "BACKGROUND")
-            bg:SetAllPoints()
-            btn.bg = bg
-            local function updateBg()
-                bg:SetTexture("Interface\\Tooltips\\UI-Tooltip-Background")
-                if GC.filterSpec == spec then
-                    bg:SetVertexColor(0.3, 0.18, 0.04, 0.95)
-                else
-                    bg:SetVertexColor(0.1, 0.07, 0.02, 0.7)
-                end
-            end
-            updateBg()
-            btn.updateBg = updateBg
-            btn:SetScript("OnClick", function()
-                if GC.filterSpec == spec then
-                    GC.filterSpec = nil
-                else
-                    GC.filterSpec = spec
-                end
-                for _, b in ipairs(frame.catBtns) do
-                    if b.updateBg then b.updateBg() end
-                end
-                GC:RefreshUI()
-            end)
-            btn:SetScript("OnEnter", function(self)
-                self.bg:SetTexture("Interface\\Tooltips\\UI-Tooltip-Background")
-                self.bg:SetVertexColor(0.4, 0.25, 0.06, 1)
-            end)
-            btn:SetScript("OnLeave", updateBg)
-            x = x + bw + 4
-            table.insert(frame.catBtns, btn)
-        end
-
-        return
-    end
 
     -- ── Recipes mode: filters by category ───────────────────────────────────
 
@@ -2596,8 +2280,12 @@ local function RefreshPatronsLeft(content, onlineCache)
             row.lfs:SetPoint("LEFT",  row, "LEFT",  leftOff, 0)
             row.lfs:SetPoint("RIGHT", row, "RIGHT", -24, 0)
 
+            local displayName = entry.name or ""
+            if entry.important then
+                displayName = "|cffffd700★ |r" .. displayName
+            end
             local skillTag = entry.minSkill and (C_GRAY .. " [" .. entry.minSkill .. "]" .. C_RESET) or ""
-            row.lfs:SetText(qc .. entry.name .. C_RESET .. skillTag .. expTag)
+            row.lfs:SetText(qc .. displayName .. C_RESET .. skillTag .. expTag)
             row.rfs:SetText(crafterStr)
 
             -- Store the entry for the right panel
@@ -2637,190 +2325,8 @@ local function RefreshPatronsLeft(content, onlineCache)
 end
 
 -- ============================================================================
--- Members view: left panel
+-- (Members view removed: Agora focuses on recipes only)
 -- ============================================================================
-
-local function RefreshMembresLeft(content)
-    local y     = 0
-    local total = 0
-
-    -- Build the full list from the guild roster
-    local guildList = {}
-    local seenInRoster = {}
-    if GetNumGuildMembers then
-        for i = 1, GetNumGuildMembers() do
-            local name, _, _, _, _, _, _, _, isOnline, _, classFile = GetGuildRosterInfo(i)
-            if name then
-                local short = name:match("^([^%-]+)") or name
-                seenInRoster[short] = true
-                table.insert(guildList, {
-                    name     = short,
-                    online   = isOnline == 1 or isOnline == true,
-                    class    = classFile or "WARRIOR",
-                    inRoster = true,
-                })
-            end
-        end
-    end
-
-    -- Always include the current player (even unguilded or before roster is loaded)
-    local myBase = (UnitName("player") or "")
-    if myBase ~= "" and not seenInRoster[myBase] then
-        local _, classFile = UnitClass("player")
-        table.insert(guildList, {
-            name     = myBase,
-            online   = true,
-            class    = classFile or "WARRIOR",
-            inRoster = false,
-        })
-    end
-
-    local allMembers = GC:GetAllMembers()
-    local dbByName   = {}
-    for _, m in pairs(allMembers) do
-        if m.name then dbByName[m.name] = m end
-    end
-
-    local search = GC.currentSearch
-
-    -- Filter and split into two groups: online / offline
-    local profFilter = GC.selectedProf  -- nil = all
-    local specFilter = GC.filterSpec    -- nil = all specializations
-    local onlineList  = {}
-    local offlineList = {}
-    for _, gm in ipairs(guildList) do
-        local dbMember = dbByName[gm.name]
-
-        -- Profession filter: if a profession is selected, skip members who don't have it
-        local matchProf = true
-        if profFilter then
-            matchProf = false
-            if dbMember then
-                for _, p in ipairs(dbMember.professions or {}) do
-                    if p.name == profFilter then matchProf = true; break end
-                end
-            end
-        end
-
-        -- Specialization filter: if a spec is selected, skip members who don't have it
-        if matchProf and specFilter then
-            matchProf = false
-            if dbMember then
-                for _, p in ipairs(dbMember.professions or {}) do
-                    if p.name == profFilter and p.specialization == specFilter then
-                        matchProf = true; break
-                    end
-                end
-            end
-        end
-
-        if matchProf then
-            local matchSearch
-            if search == "" then
-                matchSearch = true
-            else
-                matchSearch = false
-                if dbMember then
-                    for _, prof in ipairs(dbMember.professions or {}) do
-                        for _, recipe in ipairs(prof.recipes or {}) do
-                            if recipe.name and recipe.name:lower():find(search, 1, true) then
-                                matchSearch = true
-                                break
-                            end
-                        end
-                        if matchSearch then break end
-                    end
-                end
-            end
-            if matchSearch then
-                if gm.online then
-                    table.insert(onlineList,  gm)
-                else
-                    table.insert(offlineList, gm)
-                end
-            end
-        end
-    end
-    table.sort(onlineList,  function(a, b) return a.name < b.name end)
-    table.sort(offlineList, function(a, b) return a.name < b.name end)
-
-    local DOT_ON    = "|TInterface\\FriendsFrame\\StatusIcon-Online:12:12|t"
-    local DOT_OFF   = "|TInterface\\FriendsFrame\\StatusIcon-Offline:12:12|t"
-    local DOT_STALE = "|TInterface\\FriendsFrame\\StatusIcon-Away:12:12|t"
-
-    local function AddSeparator(label)
-        local row = GetRow(content, y, 0)
-        row.lfs:ClearAllPoints()
-        row.lfs:SetPoint("LEFT", row, "LEFT", 4, 0)
-        row.lfs:SetPoint("RIGHT", row, "RIGHT", -4, 0)
-        row.lfs:SetText(C_GRAY .. label .. C_RESET)
-        row.bgTex:SetTexture("Interface\\Tooltips\\UI-Tooltip-Background")
-        row.bgTex:SetVertexColor(0.1, 0.1, 0.1, 0.5)
-        row.bgTex:Show()
-        row:SetScript("OnClick", nil)
-        y = y - ROW_H
-        total = total + 1
-    end
-
-    local function AddMemberRow(gm)
-        local dbMember  = dbByName[gm.name]
-        local freshness = GetMemberFreshness(dbMember)
-        local row = GetRow(content, y, 0)
-
-        -- Dot: connection status only
-        local dot = gm.online and DOT_ON
-                 or (dbMember and freshness == "stale" and DOT_STALE)
-                 or DOT_OFF
-
-        -- Name color: whether addon data exists (independent of online status)
-        local cc
-        if dbMember then
-            cc = (freshness == "stale") and C_ORANGE or (CLASS_COLOR[gm.class] or "")
-        else
-            cc = CLASS_COLOR_DIM[gm.class] or C_GRAY
-        end
-
-        -- Specialization tag if available
-        local specTag = ""
-        if dbMember then
-            for _, p in ipairs(dbMember.professions or {}) do
-                if p.specialization then
-                    -- Extract the meaningful part: "Couture d'X" -> "X", "Maitre des X" -> "X"
-                    local short = p.specialization:match("^%S+%s+%a+'%s*(.+)$")   -- "Couture d'etoffe lunaire" -> "etoffe lunaire"
-                               or p.specialization:match("^%S+%s+%a+%s+(.+)$")    -- "Couture en tissu" or "Maitre des elixirs" -> trailing part
-                               or p.specialization:match("^%S+%s+(.+)$")           -- "Ingenieur gnome" -> "gnome"
-                               or p.specialization
-                    specTag = specTag .. " " .. C_ORANGE .. "(" .. short .. ")" .. C_RESET
-                end
-            end
-        end
-
-        row.lfs:SetText(dot .. " " .. cc .. gm.name .. C_RESET .. specTag)
-        row.rfs:SetText("")
-
-        local capturedName   = gm.name
-        local capturedMember = dbMember
-        row:SetScript("OnClick", function()
-            GC.selectedMember = capturedName
-            ShowMemberDetail(GC.mainFrame.detailPanel, capturedName, capturedMember)
-        end)
-
-        y = y - ROW_H
-        total = total + 1
-    end
-
-    if #onlineList > 0 then
-        AddSeparator(string.format(L["UI_OnlineMembers"] or "Online (%d)", #onlineList))
-        for _, gm in ipairs(onlineList)  do AddMemberRow(gm) end
-    end
-    if #offlineList > 0 then
-        if #onlineList > 0 then y = y - 4 end
-        AddSeparator(string.format(L["UI_OfflineMembers"] or "Offline (%d)", #offlineList))
-        for _, gm in ipairs(offlineList) do AddMemberRow(gm) end
-    end
-
-    return total, y
-end
 
 -- ============================================================================
 -- RefreshUI
@@ -2831,40 +2337,28 @@ function GC:RefreshUI()
     local frame   = GC.mainFrame
     local content = frame.contentLeft
 
-    -- Element visibility based on current view
-    local isPatrons = (GC.viewMode == "patrons")
+    -- Element visibility (always recipes view now)
+    GC.viewMode = "patrons"
     frame.tabArea:SetShown(true)
     if frame.tabSep then frame.tabSep:SetShown(true) end
-    -- catArea visible in recipes view (always) or members view (only when a profession is selected)
-    frame.catArea:SetShown(isPatrons or (not isPatrons and GC.selectedProf ~= nil))
-    local showPrevExpCtrl = isPatrons and (GC.currentExpansion or 2) > (GC.EXP_CLASSIC or 1)
+    frame.catArea:SetShown(true)
+    local showPrevExpCtrl = (GC.currentExpansion or 2) > (GC.EXP_CLASSIC or 1)
     if frame.prevExpChk then frame.prevExpChk:SetShown(showPrevExpCtrl) end
     if frame.prevExpLbl then frame.prevExpLbl:SetShown(showPrevExpCtrl) end
     if frame.guildOnlyChk then
-        frame.guildOnlyChk:SetShown(isPatrons)
-        if frame.guildOnlyLbl then frame.guildOnlyLbl:SetShown(isPatrons) end
+        frame.guildOnlyChk:SetShown(true)
+        if frame.guildOnlyLbl then frame.guildOnlyLbl:SetShown(true) end
     end
 
     -- Highlight the active button
-    if isPatrons then
-        frame.btnPatrons:LockHighlight()
-        frame.btnMembres:UnlockHighlight()
-    else
-        frame.btnMembres:LockHighlight()
-        frame.btnPatrons:UnlockHighlight()
-    end
-    frame.btnPatrons:SetText(isPatrons
-        and (C_GOLD .. L["UI_TabByRecipe"] .. C_RESET)
-        or  (C_GRAY .. L["UI_TabByRecipe"] .. C_RESET))
-    frame.btnMembres:SetText(not isPatrons
-        and (C_GOLD .. L["UI_TabByMember"] .. C_RESET)
-        or  (C_GRAY .. L["UI_TabByMember"] .. C_RESET))
+    frame.btnPatrons:LockHighlight()
+    frame.btnPatrons:SetText(C_GOLD .. L["UI_TabByRecipe"] .. C_RESET)
 
     -- Rebuild category / specialization filters
     GC:BuildCatFilters()
 
     -- Hide profession tabs with no results during a search
-    if isPatrons and GC.currentSearch ~= "" then
+    if GC.currentSearch ~= "" then
         local searchMap = BuildPatronMap(nil, nil, GC.currentSearch, false)
         for _, tab in ipairs(frame.tabs or {}) do
             if tab._profKey == nil then
@@ -2883,15 +2377,11 @@ function GC:RefreshUI()
     local total, y
 
     local grandKnown, grandTotal
-    if isPatrons then
-        total, y, grandKnown, grandTotal = RefreshPatronsLeft(content, onlineCache)
-    else
-        total, y = RefreshMembresLeft(content)
-    end
+    total, y, grandKnown, grandTotal = RefreshPatronsLeft(content, onlineCache)
 
-    -- Global counter in catArea (recipes view only, "All" tab)
+    -- Global counter in catArea ("All" tab)
     if frame.catCounter then
-        if isPatrons and not GC.selectedProf then
+        if not GC.selectedProf then
             frame.catCounter:SetText(
                 C_GRAY  .. "Total : " .. C_RESET
                 .. C_GREEN .. (grandKnown or 0) .. C_RESET
@@ -2955,169 +2445,6 @@ function GC:RefreshUI()
         if dp.reagSection then dp.reagSection:Hide() end
         if dp.craftersSection then dp.craftersSection:Hide() end
         if dp.colDiv then dp.colDiv:Hide() end
-        if dp.memberWidgets then
-            if dp.memberWidgets.nameLabel then dp.memberWidgets.nameLabel:Hide() end
-            if dp.memberWidgets.statusLabel then dp.memberWidgets.statusLabel:Hide() end
-            if dp.memberWidgets.scrollFrame then dp.memberWidgets.scrollFrame:Hide() end
-        end
-    end
-
-    -- Guild specialization summary (shown when no member is selected)
-    local function ShowSpecializationSummary(panel)
-        panel.hint:Hide()
-        if panel.emptyIcon then panel.emptyIcon:Hide() end
-
-        -- Collect spec -> [member names]
-        local specMap = {}   -- specName -> { members = {}, profName }
-        for _, member in pairs(GC:GetAllMembers()) do
-            if member.name then
-                for _, prof in ipairs(member.professions or {}) do
-                    if prof.specialization then
-                        local s = prof.specialization
-                        if not specMap[s] then
-                            specMap[s] = { members = {}, profName = prof.name }
-                        end
-                        table.insert(specMap[s].members, member.name)
-                    end
-                end
-            end
-        end
-
-        -- Sort specs by name
-        local specList = {}
-        for s, v in pairs(specMap) do table.insert(specList, { spec = s, data = v }) end
-        table.sort(specList, function(a, b) return a.spec < b.spec end)
-
-        -- Recycle existing widgets
-        if not panel._specWidgets then panel._specWidgets = {} end
-        for _, w in ipairs(panel._specWidgets) do w:Hide() end
-        panel._specWidgets = {}
-
-        local function AddWidget(w)
-            table.insert(panel._specWidgets, w)
-        end
-
-        local y = -10
-
-        if #specList == 0 then
-            local lbl = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            lbl:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, y)
-            lbl:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -10, y)
-            lbl:SetText(C_GRAY .. (L["UI_NoSpecialization"] or "No specialization data in the guild.") .. C_RESET)
-            lbl:SetJustifyH("LEFT")
-            AddWidget(lbl)
-            return
-        end
-
-        local titleLbl = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        titleLbl:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, y)
-        titleLbl:SetText(C_GOLD .. (L["UI_GuildSpecializations"] or "Guild specializations") .. C_RESET)
-        titleLbl:SetJustifyH("LEFT")
-        AddWidget(titleLbl)
-        y = y - 22
-
-        for _, entry in ipairs(specList) do
-            -- Spec header
-            local hdr = CreateFrame("Frame", nil, panel)
-            hdr:SetHeight(20)
-            hdr:SetPoint("TOPLEFT",  panel, "TOPLEFT",  6, y)
-            hdr:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -6, y)
-            local hdrBg = hdr:CreateTexture(nil, "BACKGROUND")
-            hdrBg:SetAllPoints()
-            hdrBg:SetTexture("Interface\\Tooltips\\UI-Tooltip-Background")
-            hdrBg:SetVertexColor(0.15, 0.08, 0.02, 0.9)
-            local hdrLbl = hdr:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            hdrLbl:SetJustifyH("LEFT")
-            hdrLbl:SetPoint("LEFT",  hdr, "LEFT", 4, 0)
-            hdrLbl:SetPoint("RIGHT", hdr, "RIGHT", -4, 0)
-            local count = #entry.data.members
-            hdrLbl:SetText(C_GOLD .. entry.spec .. C_RESET
-                .. "  " .. C_GREEN .. (count == 1 and (L["UI_MemberCount_one"] or "1 member") or string.format(L["UI_MemberCount_many"] or "%d members", count)) .. C_RESET)
-            AddWidget(hdr)
-            y = y - 22
-
-            -- Member list
-            table.sort(entry.data.members)
-            for _, mName in ipairs(entry.data.members) do
-                local mLbl = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                mLbl:SetPoint("TOPLEFT", panel, "TOPLEFT", 16, y)
-                mLbl:SetJustifyH("LEFT")
-                local info = onlineCache and onlineCache[mName]
-                local cc = (info and info.class and CLASS_COLOR[info.class]) or C_GRAY
-                local dot = (info and info.online)
-                    and "|TInterface\\FriendsFrame\\StatusIcon-Online:10:10|t "
-                    or  "|TInterface\\FriendsFrame\\StatusIcon-Offline:10:10|t "
-                mLbl:SetText(dot .. cc .. mName .. C_RESET)
-                AddWidget(mLbl)
-                y = y - 18
-            end
-            y = y - 4
-        end
-    end
-
-    -- Show recipes matching the search (members view + active search)
-    local function ShowSearchResults(panel, cache)
-        HideDetailWidgets(panel)
-        panel.hint:Hide()
-        if panel.emptyIcon then panel.emptyIcon:Hide() end
-        panel:Show()
-
-        local search  = GC.currentSearch
-        local entries = {}
-        local map, ord = BuildPatronMap(nil, nil, search, false)
-        for _, profName in ipairs(ord) do
-            for _, e in ipairs(map[profName] or {}) do
-                table.insert(entries, e)
-            end
-        end
-        table.sort(entries, function(a, b)
-            local aK = a.crafters and #a.crafters > 0
-            local bK = b.crafters and #b.crafters > 0
-            if aK ~= bK then return aK end
-            return (a.name or "") < (b.name or "")
-        end)
-
-        panel.srTitle:SetText(
-            C_GRAY .. #entries .. " recipe(s) for \"" .. search .. "\"" .. C_RESET)
-        panel.srTitle:Show()
-        panel.srScrollFrame:Show()
-
-        -- Reset scroll position
-        panel.srScrollFrame:SetVerticalScroll(0)
-
-        local sc    = panel.srScrollChild
-        local pool  = panel.srRows
-        local shown = math.min(#entries, #pool)
-
-        for i = 1, #pool do
-            local row = pool[i]
-            row:ClearAllPoints()
-            row:SetPoint("TOPLEFT",  sc, "TOPLEFT",  0, -(i-1)*22)
-            row:SetPoint("TOPRIGHT", sc, "TOPRIGHT", 0, -(i-1)*22)
-            if i <= shown then
-                local entry = entries[i]
-                row:Show()
-                row.srIcon:SetTexture(ResolveIcon(entry) or "Interface\\Icons\\INV_Misc_QuestionMark")
-                local hasIt = entry.crafters and #entry.crafters > 0
-                local qc = hasIt and (QUALITY_COLOR[entry.quality or 2] or QUALITY_COLOR[2]) or C_GRAY
-                row.srName:SetText(qc .. (entry.name or "") .. C_RESET)
-                local crafterCount = hasIt and (C_GREEN .. #entry.crafters .. "|r") or (C_GRAY .. "0|r")
-                row.srProf:SetText(C_GRAY .. (entry.prof or "") .. "  " .. C_RESET .. crafterCount)
-                local cap = entry
-                row:SetScript("OnEnter", function(self) ShowEntryTooltip(self, cap) end)
-                row:SetScript("OnLeave", function() HideTooltip() end)
-                row:SetScript("OnClick", function()
-                    GC.viewMode     = "patrons"
-                    GC.selectedProf = nil
-                    GC:RefreshUI()
-                    ShowRecipeDetail(GC.mainFrame.detailPanel, cap, BuildOnlineCache())
-                end)
-            else
-                row:Hide()
-            end
-        end
-
-        sc:SetHeight(math.max(shown * 22, 1))
     end
 
     -- Build the onboarding message if nobody in the guild has any recipe data yet
@@ -3135,38 +2462,20 @@ function GC:RefreshUI()
                (L["UI_OnboardingMain"] or "Open each profession window\nto sync your recipes\nwith your guildmates.")
     end
 
-    if isPatrons then
-        if not GC.selectedRecipe then
-            -- Hide all detail widgets and show the hint
-            HideDetailWidgets(dp)
-            local onboard = GetOnboardingHint()
-            if onboard then
-                dp.hint:SetText(onboard)
-            else
-                dp.hint:SetText(C_GRAY .. (L["UI_SelectRecipe"] or "Select a recipe") .. C_RESET)
-            end
-            dp.hint:Show()
-            if dp.emptyIcon then dp.emptyIcon:Show() end
-            dp:Show()
+    if not GC.selectedRecipe then
+        -- Hide all detail widgets and show the hint
+        HideDetailWidgets(dp)
+        local onboard = GetOnboardingHint()
+        if onboard then
+            dp.hint:SetText(onboard)
         else
-            ShowRecipeDetail(dp, GC.selectedRecipe, onlineCache)
+            dp.hint:SetText(C_GRAY .. (L["UI_SelectRecipe"] or "Select a recipe") .. C_RESET)
         end
+        dp.hint:Show()
+        if dp.emptyIcon then dp.emptyIcon:Show() end
+        dp:Show()
     else
-        -- Members view
-        if GC.currentSearch ~= "" then
-            -- Active search: show matching recipes on the right
-            ShowSearchResults(dp, onlineCache)
-        elseif not GC.selectedMember then
-            HideDetailWidgets(dp)
-            HideSearchResults(dp)
-            ShowSpecializationSummary(dp)
-            dp:Show()
-        else
-            local allMembers = GC:GetAllMembers()
-            local dbByName   = {}
-            for _, m in pairs(allMembers) do if m.name then dbByName[m.name] = m end end
-            ShowMemberDetail(dp, GC.selectedMember, dbByName[GC.selectedMember])
-        end
+        ShowRecipeDetail(dp, GC.selectedRecipe, onlineCache)
     end
 
     -- Sync prevExp checkbox state
