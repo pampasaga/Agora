@@ -186,7 +186,7 @@ function GC:CreateDebugUI()
     local clearLogBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
     clearLogBtn:SetSize(90, 18)
     clearLogBtn:SetPoint("TOPLEFT", frame, "TOPLEFT", 120, -302)
-    clearLogBtn:SetText(Agora.L and Agora.L["DEBUG_ClearLogs"] or "Clear logs")
+    clearLogBtn:SetText(L["DEBUG_ClearLogs"] or "Clear logs")
     clearLogBtn:SetScript("OnClick", function()
         GC._logLines = {}
         if GC.debugFrame then
