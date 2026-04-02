@@ -618,6 +618,7 @@ local function BuildPatronMap(profFilter, catFilter, search, guildOnly)
                                 provides_mats = peerData.provides_mats or false,
                                 cd_available  = recipe.cd_available,
                                 source        = "server",
+                                class         = peerData.class or nil,
                             })
                         end
                     end
@@ -1475,6 +1476,7 @@ local function ShowRecipeDetail(panel, entry, onlineCache)
         end
 
         -- Whisper button (guild crafters only, when online)
+        local whisperVisible = false
         if crafter.source == "guild" then
             local info = onlineCache and onlineCache[crafter.name]
             if info and info.online then
@@ -1486,6 +1488,17 @@ local function ShowRecipeDetail(panel, entry, onlineCache)
                     end
                 end)
                 row.whisperBtn:Show()
+                whisperVisible = true
+            end
+        end
+
+        -- Adjust price anchor to avoid overlap with whisper button
+        if row.price then
+            row.price:ClearAllPoints()
+            if whisperVisible then
+                row.price:SetPoint("TOPRIGHT", row, "TOPRIGHT", -74, -2)
+            else
+                row.price:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, -2)
             end
         end
     end
@@ -1512,17 +1525,15 @@ local function ShowRecipeDetail(panel, entry, onlineCache)
     local serverShown = 0
     if #serverCrafters > 0 and rowIdx < MAX_CRAFTERS then
         -- Show server section label
+        local serverCap = math.min(#serverCrafters, MAX_CRAFTERS - rowIdx)
         if panel.detailServerLabel then
-            local sn = #serverCrafters
-            local serverLbl = "Server (" .. sn .. ")"
+            local serverLbl = "Server (" .. serverCap .. ")"
             panel.detailServerLabel:SetText("|cff888888" .. serverLbl .. "|r")
             panel.detailServerLabel:ClearAllPoints()
             panel.detailServerLabel:SetPoint("TOPLEFT", panel.craftersSection, "TOPLEFT", 10, totalY - 4)
             panel.detailServerLabel:Show()
             totalY = totalY - 16
         end
-
-        local serverCap = math.min(#serverCrafters, MAX_CRAFTERS - rowIdx)
         for si = 1, serverCap do
             rowIdx = rowIdx + 1
             serverShown = serverShown + 1
