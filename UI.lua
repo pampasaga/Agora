@@ -2175,13 +2175,14 @@ function GC:CreateProposePanel()
         rl:SetText(priceLabels[i])
         rl:SetPoint("LEFT", rb, "RIGHT", 2, 0)
         local captOpt = opt
-        local captIdx = i
         rb:SetScript("OnClick", function()
-            GC:SetPriceDefault(captOpt == "custom" and "" or captOpt)
             for _, r in ipairs(priceRadios) do r:SetChecked(false) end
             rb:SetChecked(true)
             if priceEditBox then
                 priceEditBox:SetShown(captOpt == "custom")
+            end
+            if captOpt ~= "custom" then
+                GC:SetPriceDefault(captOpt)
             end
         end)
         table.insert(priceRadios, rb)
